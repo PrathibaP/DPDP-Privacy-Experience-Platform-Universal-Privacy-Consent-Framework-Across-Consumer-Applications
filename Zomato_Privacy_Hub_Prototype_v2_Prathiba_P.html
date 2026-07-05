@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zomato Privacy Hub — Clickable Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --red:#E23744;
+    --red-dark:#B21E2C;
+    --red-tint:#FCEBEC;
+    --ink:#1F2933;
+    --ink-soft:#3A4450;
+    --muted:#6B7280;
+    --line:#E9EAEC;
+    --panel:#F7F7F8;
+    --white:#FFFFFF;
+    --emerald:#0E9F6E;
+    --emerald-tint:#E8F8F1;
+    --amber:#E8A33D;
+    --amber-tint:#FDF3E3;
+    --page-bg:#15181C;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--page-bg);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:48px 24px;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(226,55,68,0.16), transparent 40%),
+      radial-gradient(circle at 88% 82%, rgba(14,159,110,0.10), transparent 40%);
+  }
+
+  .stage{
+    display:flex;
+    gap:56px;
+    align-items:flex-start;
+    max-width:1180px;
+    width:100%;
+  }
+
+  /* ---------- Left rail: flow guide ---------- */
+  .rail{
+    width:300px;
+    flex-shrink:0;
+    padding-top:12px;
+  }
+  .rail-eyebrow{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:1.6px;
+    color:#F2A9AE;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .rail-title{
+    font-family:'Poppins',sans-serif;
+    font-size:24px;
+    font-weight:700;
+    color:var(--white);
+    margin:0 0 6px;
+    line-height:1.25;
+  }
+  .rail-sub{
+    font-size:13px;
+    color:#9AA4B2;
+    line-height:1.5;
+    margin-bottom:28px;
+  }
+  .rail-steps{ list-style:none; margin:0; padding:0; }
+  .rail-step{
+    position:relative;
+    padding:10px 0 10px 34px;
+    cursor:pointer;
+    border-left:2px solid #2C333B;
+    margin-left:13px;
+  }
+  .rail-step:last-child{ border-left:2px solid transparent; }
+  .rail-step .dot{
+    position:absolute;
+    left:-8px;
+    top:12px;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    background:#2C333B;
+    border:2px solid var(--page-bg);
+    transition:all .2s ease;
+  }
+  .rail-step .label{
+    font-size:13.5px;
+    font-weight:600;
+    color:#7E8894;
+    transition:color .2s ease;
+  }
+  .rail-step .desc{
+    font-size:11.5px;
+    color:#5B636D;
+    margin-top:2px;
+    line-height:1.4;
+    display:none;
+  }
+  .rail-step.active .dot{ background:var(--red); box-shadow:0 0 0 4px rgba(226,55,68,0.22); }
+  .rail-step.active .label{ color:var(--white); }
+  .rail-step.active .desc{ display:block; }
+  .rail-step.done .dot{ background:var(--emerald); }
+  .rail-step.done .label{ color:#B7BEC7; }
+
+  .rail-note{
+    margin-top:28px;
+    padding:14px 16px;
+    background:rgba(255,255,255,0.04);
+    border-radius:10px;
+    font-size:11.5px;
+    color:#8A93A0;
+    line-height:1.5;
+  }
+  .rail-note b{ color:#C9CED5; }
+
+  /* ---------- Phone frame ---------- */
+  .phone-wrap{ flex-shrink:0; }
+  .phone{
+    width:380px;
+    height:790px;
+    background:var(--ink);
+    border-radius:46px;
+    padding:14px;
+    box-shadow:0 30px 70px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+    position:relative;
+  }
+  .notch{
+    position:absolute;
+    top:14px; left:50%; transform:translateX(-50%);
+    width:120px; height:26px;
+    background:var(--ink);
+    border-radius:0 0 16px 16px;
+    z-index:5;
+  }
+  .screen{
+    width:100%; height:100%;
+    background:var(--white);
+    border-radius:32px;
+    overflow:hidden;
+    position:relative;
+  }
+  .statusbar{
+    height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink);
+    flex-shrink:0;
+  }
+
+  .view{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    background:var(--white);
+    opacity:0;
+    transform:translateX(16px);
+    pointer-events:none;
+    transition:opacity .28s ease, transform .28s ease;
+  }
+  .view.active{
+    opacity:1;
+    transform:translateX(0);
+    pointer-events:auto;
+    z-index:2;
+  }
+
+  .view-body{ flex:1; overflow-y:auto; padding-bottom:14px; }
+  .view-body::-webkit-scrollbar{ display:none; }
+
+  /* ---------- Shared components ---------- */
+  .topbar{
+    display:flex; align-items:center; gap:12px;
+    padding:6px 18px 14px;
+    flex-shrink:0;
+  }
+  .topbar .tb-title{ font-size:17px; font-weight:700; color:var(--ink); font-family:'Poppins',sans-serif; }
+  .back-btn{
+    width:32px; height:32px; border-radius:50%;
+    background:var(--panel);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0;
+  }
+  .back-btn svg{ width:16px; height:16px; }
+
+  .btn{
+    border:none; cursor:pointer; border-radius:12px;
+    font-size:14.5px; font-weight:700; font-family:'Inter',sans-serif;
+    padding:14px 18px; width:100%;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn-primary{ background:var(--red); color:var(--white); }
+  .btn-primary:hover{ background:var(--red-dark); }
+  .btn-ghost{ background:var(--panel); color:var(--ink); }
+  .btn-danger-outline{ background:var(--white); color:var(--red); border:1.5px solid var(--red); }
+  .btn-emerald{ background:var(--emerald); color:var(--white); }
+
+  .card{
+    background:var(--panel);
+    border-radius:16px;
+    padding:16px;
+  }
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:10.5px; font-weight:700;
+    padding:4px 9px; border-radius:20px;
+  }
+  .badge-emerald{ background:var(--emerald-tint); color:var(--emerald); }
+  .badge-amber{ background:var(--amber-tint); color:var(--amber); }
+
+  /* toggle switch */
+  .toggle{
+    width:44px; height:26px; border-radius:20px;
+    background:#D9DCE1; position:relative; cursor:pointer;
+    flex-shrink:0; transition:background .2s ease;
+  }
+  .toggle::after{
+    content:''; position:absolute; top:3px; left:3px;
+    width:20px; height:20px; border-radius:50%;
+    background:var(--white); box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    transition:left .2s ease;
+  }
+  .toggle.on{ background:var(--emerald); }
+  .toggle.on::after{ left:21px; }
+  .toggle.locked{ background:#C9CED5; cursor:not-allowed; opacity:.85; }
+
+  /* ---------- WELCOME ---------- */
+  .welcome-bg{
+    height:100%;
+    background:linear-gradient(160deg, var(--red) 0%, var(--red-dark) 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    color:var(--white); text-align:center; padding:0 34px;
+  }
+  .logo-mark{
+    width:64px; height:64px; border-radius:18px;
+    background:rgba(255,255,255,0.15);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:18px;
+  }
+  .welcome-bg h1{ font-family:'Poppins',sans-serif; font-size:26px; margin:0 0 8px; }
+  .welcome-bg p{ font-size:13.5px; color:rgba(255,255,255,0.85); margin:0 0 34px; line-height:1.5; }
+  .welcome-bg .btn{ background:var(--white); color:var(--red-dark); max-width:260px; }
+
+  /* ---------- CONSENT (signup) ---------- */
+  .consent-item{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:14px 0; border-bottom:1px solid var(--line);
+  }
+  .consent-item:last-child{ border-bottom:none; }
+  .consent-item .ci-title{ font-size:13.5px; font-weight:700; color:var(--ink); }
+  .consent-item .ci-desc{ font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.4; }
+
+  /* ---------- HOME ---------- */
+  .home-header{
+    padding:16px 18px 12px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .avatar{
+    width:36px; height:36px; border-radius:50%;
+    background:var(--red-tint); color:var(--red-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .search-pill{
+    margin:0 18px 14px; background:var(--panel); border-radius:14px;
+    padding:12px 14px; font-size:13px; color:var(--muted); display:flex; gap:8px; align-items:center;
+  }
+  .rest-card{
+    margin:0 18px 14px; border-radius:16px; overflow:hidden;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06); border:1px solid var(--line);
+  }
+  .rest-img{ height:110px; background:linear-gradient(135deg,#FCEBEC,#FBD9DB); display:flex; align-items:center; justify-content:center; }
+  .rest-info{ padding:12px 14px; }
+  .rest-info .name{ font-size:14px; font-weight:700; }
+  .rest-info .meta{ font-size:11.5px; color:var(--muted); margin-top:3px; }
+
+  /* ---------- ACCOUNT ---------- */
+  .acc-item{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 18px; cursor:pointer; border-bottom:1px solid var(--line);
+  }
+  .acc-item:hover{ background:var(--panel); }
+  .acc-icon{
+    width:36px; height:36px; border-radius:10px; background:var(--panel);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .acc-icon.privacy{ background:var(--red-tint); }
+  .acc-item .acc-label{ font-size:13.5px; font-weight:600; flex:1; }
+  .acc-item .chev{ color:#C1C7CD; }
+
+  /* ---------- PRIVACY HUB ---------- */
+  .score-wrap{
+    display:flex; flex-direction:column; align-items:center;
+    padding:8px 0 18px;
+  }
+  .ring{
+    width:132px; height:132px; border-radius:50%;
+    background:conic-gradient(var(--emerald) 0deg 313deg, #EAECEF 313deg 360deg);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .ring::before{
+    content:''; position:absolute; width:106px; height:106px; border-radius:50%; background:var(--white);
+  }
+  .ring-inner{ position:relative; text-align:center; }
+  .ring-inner .num{ font-family:'Poppins',sans-serif; font-size:26px; font-weight:700; color:var(--ink); }
+  .ring-inner .lbl{ font-size:9.5px; color:var(--muted); font-weight:600; letter-spacing:.4px; }
+  .score-caption{ font-size:12px; color:var(--muted); margin-top:10px; text-align:center; padding:0 30px; line-height:1.4; }
+
+  .hub-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 18px; }
+  .hub-tile{
+    background:var(--panel); border-radius:14px; padding:14px 12px;
+    cursor:pointer; transition:background .15s ease;
+  }
+  .hub-tile:hover{ background:#EFEFF1; }
+  .hub-tile .ht-icon{
+    width:34px; height:34px; border-radius:9px; background:var(--white);
+    display:flex; align-items:center; justify-content:center; margin-bottom:8px;
+  }
+  .hub-tile .ht-label{ font-size:12.5px; font-weight:700; color:var(--ink); }
+  .hub-tile .ht-desc{ font-size:10.5px; color:var(--muted); margin-top:2px; line-height:1.3; }
+
+  .section-label{
+    font-size:11px; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:1px;
+    padding:18px 18px 8px;
+  }
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:absolute; left:18px; right:18px; bottom:22px;
+    background:var(--ink); color:var(--white);
+    padding:13px 16px; border-radius:12px;
+    display:flex; align-items:center; gap:10px;
+    font-size:12.5px; font-weight:600;
+    box-shadow:0 10px 24px rgba(0,0,0,0.25);
+    opacity:0; transform:translateY(12px);
+    transition:all .25s ease;
+    pointer-events:none;
+    z-index:20;
+  }
+  .toast.show{ opacity:1; transform:translateY(0); }
+  .toast .tick{
+    width:20px; height:20px; border-radius:50%; background:var(--emerald);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+
+  /* ---------- success state ---------- */
+  .success-wrap{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:0 30px; text-align:center;
+  }
+  .success-icon{
+    width:74px; height:74px; border-radius:50%; background:var(--emerald-tint);
+    display:flex; align-items:center; justify-content:center; margin-bottom:18px;
+  }
+  .success-wrap h3{ font-family:'Poppins',sans-serif; font-size:19px; margin:0 0 8px; }
+  .success-wrap p{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 26px; }
+
+  .receipt-item{
+    margin:0 18px 10px; padding:13px 14px; background:var(--panel); border-radius:12px;
+  }
+  .receipt-item .r-top{ display:flex; justify-content:space-between; align-items:center; }
+  .receipt-item .r-purpose{ font-size:12.5px; font-weight:700; }
+  .receipt-item .r-time{ font-size:10.5px; color:var(--muted); margin-top:3px; }
+
+  .icon{ width:18px; height:18px; }
+  .stack-tight > * + *{ margin-top:10px; }
+
+  /* ---------- DARK MODE (scoped variable override — cascades to every component) ---------- */
+  .screen.dark{
+    --white:#1C2027; --panel:#262B33; --ink:#F1F3F5; --ink-soft:#C8CDD4;
+    --muted:#8A93A0; --line:#333944; --red-tint:#3A2226; --emerald-tint:#123328; --amber-tint:#332711;
+  }
+  .screen.dark .view{ background:var(--white); }
+  .screen.dark .rest-img{ filter:brightness(.8) saturate(.85); }
+  .screen.dark .welcome-bg{ background:linear-gradient(160deg,#7A1620 0%,#4E0F16 100%); }
+
+  /* ---------- Onboarding cards ---------- */
+  .onb-card{ display:none; flex-direction:column; align-items:center; text-align:center; padding:6px 26px 0; }
+  .onb-card.active{ display:flex; }
+  .onb-icon{ width:64px; height:64px; border-radius:20px; background:var(--red-tint); display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+  .onb-card h3{ font-family:'Poppins',sans-serif; font-size:17px; margin:0 0 8px; }
+  .onb-card p{ font-size:12.5px; color:var(--muted); line-height:1.55; margin:0; }
+  .onb-dots{ display:flex; gap:6px; justify-content:center; margin:22px 0 18px; }
+  .onb-dots span{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:all .2s ease; }
+  .onb-dots span.on{ width:16px; background:var(--red); }
+
+  /* ---------- Stat grid (dashboard) ---------- */
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 18px; }
+  .stat-tile{ background:var(--panel); border-radius:14px; padding:14px; }
+  .stat-tile .st-num{ font-family:'Poppins',sans-serif; font-size:22px; font-weight:700; color:var(--ink); }
+  .stat-tile .st-lbl{ font-size:10.5px; color:var(--muted); margin-top:2px; line-height:1.3; }
+  .stat-tile .st-delta{ font-size:10px; font-weight:700; margin-top:6px; display:inline-block; }
+  .st-delta.up{ color:var(--emerald); } .st-delta.down{ color:var(--red); }
+
+  .bar-block{ padding:2px 18px 0; }
+  .bar-row{ margin-bottom:13px; }
+  .bar-row .bar-top{ display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; }
+  .bar-row .bar-top .bt-label{ font-weight:600; color:var(--ink); }
+  .bar-row .bar-top .bt-val{ font-weight:700; color:var(--muted); }
+  .bar-track{ height:7px; border-radius:6px; background:var(--line); overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:6px; background:var(--emerald); }
+
+  .badge-row{ display:flex; gap:8px; padding:0 18px; flex-wrap:wrap; }
+  .pbadge{ display:flex; align-items:center; gap:6px; background:var(--emerald-tint); color:var(--emerald); font-size:10.5px; font-weight:700; padding:7px 11px; border-radius:20px; }
+
+  /* ---------- Data flow map ---------- */
+  .flow-you{ margin:6px auto 0; width:74px; height:74px; border-radius:50%; background:var(--red); color:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; }
+  .flow-stem{ width:2px; height:22px; background:var(--line); margin:0 auto; }
+  .flow-list{ padding:0 18px; }
+  .flow-node{ display:flex; align-items:center; gap:12px; background:var(--panel); border-radius:14px; padding:12px 14px; margin-bottom:10px; cursor:pointer; border:1.5px solid transparent; }
+  .flow-node.paused{ opacity:.55; }
+  .flow-node.expanded{ border-color:var(--line); background:var(--white); box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+  .flow-node .fn-icon{ width:36px; height:36px; border-radius:10px; background:var(--white); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .flow-node .fn-title{ font-size:13px; font-weight:700; }
+  .flow-node .fn-sub{ font-size:10.5px; color:var(--muted); margin-top:1px; }
+  .flow-detail{ display:none; padding:10px 14px 0; font-size:11.5px; color:var(--muted); line-height:1.5; border-top:1px solid var(--line); margin-top:10px; }
+  .flow-node.expanded .flow-detail{ display:block; }
+
+  /* ---------- Nutrition label ---------- */
+  .nutri-head{ padding:0 18px 10px; }
+  .nutri-table{ margin:0 18px; border:1.5px solid var(--ink); border-radius:4px; overflow:hidden; }
+  .nutri-title-row{ background:var(--ink); color:#fff; padding:8px 12px; font-family:'Poppins',sans-serif; font-weight:700; font-size:13px; }
+  .nutri-row{ display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid var(--line); font-size:11.5px; }
+  .nutri-row:last-child{ border-bottom:none; }
+  .nutri-row .nr-name{ font-weight:600; }
+  .nutri-row .nr-tag{ color:var(--muted); font-size:10px; }
+  .nutri-foot{ padding:9px 12px; font-size:10px; color:var(--muted); background:var(--panel); }
+
+  /* ---------- Choice cards (location) ---------- */
+  .choice-card{ display:flex; align-items:center; gap:12px; padding:13px 14px; border:1.5px solid var(--line); border-radius:14px; margin:0 18px 10px; cursor:pointer; }
+  .choice-card.selected{ border-color:var(--red); background:var(--red-tint); }
+  .choice-radio{ width:18px; height:18px; border-radius:50%; border:2px solid var(--line); flex-shrink:0; position:relative; }
+  .choice-card.selected .choice-radio{ border-color:var(--red); }
+  .choice-card.selected .choice-radio::after{ content:''; position:absolute; inset:3px; border-radius:50%; background:var(--red); }
+  .choice-card .cc-title{ font-size:13px; font-weight:700; }
+  .choice-card .cc-desc{ font-size:10.5px; color:var(--muted); margin-top:1px; }
+
+  /* ---------- Roadmap ---------- */
+  .rm-item{ display:flex; gap:12px; padding:0 18px 18px; position:relative; }
+  .rm-quarter{ width:44px; flex-shrink:0; text-align:center; }
+  .rm-quarter .rq-tag{ font-family:'Poppins',sans-serif; font-weight:700; font-size:12px; color:var(--red); }
+  .rm-line{ width:2px; background:var(--line); flex:1; margin:4px auto 0; }
+  .rm-item:last-child .rm-line{ display:none; }
+  .rm-body{ flex:1; padding-bottom:2px; }
+  .rm-body .rm-h{ font-size:13px; font-weight:700; margin-bottom:3px; }
+  .rm-body .rm-p{ font-size:11px; color:var(--muted); line-height:1.4; }
+
+  /* ---------- Grievance / audit ---------- */
+  .officer-card{ margin:0 18px 14px; background:var(--panel); border-radius:14px; padding:14px; display:flex; gap:12px; align-items:center; }
+  .officer-avatar{ width:40px; height:40px; border-radius:50%; background:var(--white); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  textarea.g-input{ width:calc(100% - 36px); margin:0 18px; border:1.5px solid var(--line); border-radius:12px; padding:12px; font-family:'Inter',sans-serif; font-size:12.5px; resize:none; min-height:90px; }
+  .audit-item{ display:flex; gap:12px; align-items:flex-start; padding:12px 18px; border-bottom:1px solid var(--line); }
+  .audit-item .au-icon{ width:32px; height:32px; border-radius:9px; background:var(--panel); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .audit-item .au-title{ font-size:12.5px; font-weight:600; }
+  .audit-item .au-sub{ font-size:10.5px; color:var(--muted); margin-top:1px; }
+
+  /* ---------- Bell / notifications ---------- */
+  .bell-btn{ margin-left:auto; width:32px; height:32px; border-radius:50%; background:var(--panel); display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; flex-shrink:0; }
+  .bell-dot{ position:absolute; top:6px; right:7px; width:7px; height:7px; border-radius:50%; background:var(--red); border:1.5px solid var(--white); }
+  .notif-panel{ position:absolute; inset:0; background:var(--white); z-index:15; display:none; flex-direction:column; }
+  .notif-panel.show{ display:flex; }
+  .notif-item{ padding:13px 18px; border-bottom:1px solid var(--line); }
+  .notif-item .ni-title{ font-size:12.5px; font-weight:700; }
+  .notif-item .ni-desc{ font-size:11px; color:var(--muted); margin-top:3px; line-height:1.4; }
+  .notif-item .ni-time{ font-size:10px; color:#AEB4BC; margin-top:5px; }
+
+  /* ---------- Floating AI Privacy Assistant ---------- */
+  .assistant-fab{
+    position:absolute; right:16px; bottom:16px; width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(135deg,var(--red),var(--red-dark)); box-shadow:0 8px 20px rgba(226,55,68,0.4);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:18;
+    transition:transform .15s ease;
+  }
+  .assistant-fab:active{ transform:scale(.93); }
+  .assistant-fab .ping{ position:absolute; inset:0; border-radius:50%; border:2px solid var(--red); opacity:0; animation:ping 2.4s ease-out infinite; }
+  @keyframes ping{ 0%{ transform:scale(1); opacity:.6; } 100%{ transform:scale(1.6); opacity:0; } }
+
+  .assistant-panel{
+    position:absolute; left:10px; right:10px; bottom:10px; top:64px;
+    background:var(--white); border-radius:22px; box-shadow:0 12px 32px rgba(0,0,0,0.28);
+    display:flex; flex-direction:column; overflow:hidden;
+    transform:translateY(16px) scale(.98); opacity:0; pointer-events:none; transition:all .22s ease; z-index:19;
+  }
+  .assistant-panel.show{ transform:translateY(0) scale(1); opacity:1; pointer-events:auto; }
+  .asst-head{ background:linear-gradient(135deg,var(--red),var(--red-dark)); color:#fff; padding:14px 16px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .asst-head .ah-title{ font-family:'Poppins',sans-serif; font-weight:700; font-size:13.5px; }
+  .asst-head .ah-sub{ font-size:10px; opacity:.85; }
+  .asst-close{ margin-left:auto; width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .asst-body{ flex:1; overflow-y:auto; padding:14px; }
+  .asst-body::-webkit-scrollbar{ display:none; }
+  .chat-row{ display:flex; margin-bottom:10px; }
+  .chat-row.user{ justify-content:flex-end; }
+  .chat-bubble{ max-width:80%; padding:10px 13px; border-radius:14px; font-size:12px; line-height:1.5; }
+  .chat-row.bot .chat-bubble{ background:var(--panel); color:var(--ink); border-bottom-left-radius:4px; }
+  .chat-row.user .chat-bubble{ background:var(--red); color:#fff; border-bottom-right-radius:4px; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; padding:0 14px 14px; flex-shrink:0; }
+  .chip{ background:var(--red-tint); color:var(--red-dark); font-size:11px; font-weight:600; padding:8px 12px; border-radius:20px; cursor:pointer; border:1px solid transparent; }
+  .chip:hover{ border-color:var(--red); }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- LEFT RAIL -->
+  <div class="rail">
+    <div class="rail-eyebrow">Clickable Prototype · v2</div>
+    <h2 class="rail-title">Zomato Privacy Hub</h2>
+    <p class="rail-sub">Full walkthrough — from onboarding to grievance redressal. Click through the phone, or jump to any step below. Tap the red bubble in the phone for the AI Privacy Assistant, anytime.</p>
+    <ul class="rail-steps" id="railSteps">
+      <li class="rail-step" data-view="welcome"><span class="dot"></span><div class="label">1. Welcome</div><div class="desc">Entry point before signup</div></li>
+      <li class="rail-step" data-view="onboarding"><span class="dot"></span><div class="label">2. Privacy onboarding</div><div class="desc">Plain-language explainer before any consent is asked</div></li>
+      <li class="rail-step" data-view="consent"><span class="dot"></span><div class="label">3. Purpose-wise consent</div><div class="desc">Granular toggles replace one bundled checkbox</div></li>
+      <li class="rail-step" data-view="home"><span class="dot"></span><div class="label">4. Home feed</div><div class="desc">Normal browsing — privacy stays out of the way</div></li>
+      <li class="rail-step" data-view="account"><span class="dot"></span><div class="label">5. Account</div><div class="desc">Privacy Hub is a first-class entry, not buried</div></li>
+      <li class="rail-step" data-view="privacyhub"><span class="dot"></span><div class="label">6. Privacy Hub</div><div class="desc">Trust score, notifications and every control in one place</div></li>
+      <li class="rail-step" data-view="dashboard"><span class="dot"></span><div class="label">7. Privacy dashboard</div><div class="desc">Health-score breakdown behind the trust score</div></li>
+      <li class="rail-step" data-view="datamap"><span class="dot"></span><div class="label">8. Live data flow map</div><div class="desc">Who actually holds your data, right now</div></li>
+      <li class="rail-step" data-view="nutrition"><span class="dot"></span><div class="label">9. Privacy nutrition label</div><div class="desc">At-a-glance label for a single order</div></li>
+      <li class="rail-step" data-view="manage"><span class="dot"></span><div class="label">10. Manage consent</div><div class="desc">Revisit and change any toggle, anytime</div></li>
+      <li class="rail-step" data-view="location"><span class="dot"></span><div class="label">11. Location controls</div><div class="desc">Contextual, precise-vs-approximate, time-bound</div></li>
+      <li class="rail-step" data-view="marketing"><span class="dot"></span><div class="label">12. Marketing controls</div><div class="desc">Channel-level, not all-or-nothing</div></li>
+      <li class="rail-step" data-view="restaurant"><span class="dot"></span><div class="label">13. Restaurant sharing</div><div class="desc">Field-level control over what a partner sees</div></li>
+      <li class="rail-step" data-view="delivery"><span class="dot"></span><div class="label">14. Delivery partner sharing</div><div class="desc">Masked number, live-location window</div></li>
+      <li class="rail-step" data-view="ledger"><span class="dot"></span><div class="label">15. Third-party sharing ledger</div><div class="desc">Every disclosure, logged and searchable</div></li>
+      <li class="rail-step" data-view="download"><span class="dot"></span><div class="label">16. Download my data</div><div class="desc">Self-serve export — no support ticket</div></li>
+      <li class="rail-step" data-view="delete"><span class="dot"></span><div class="label">17. Delete my data</div><div class="desc">Self-serve erasure request</div></li>
+      <li class="rail-step" data-view="receipts"><span class="dot"></span><div class="label">18. Consent timeline &amp; receipts</div><div class="desc">Timestamped record of every decision</div></li>
+      <li class="rail-step" data-view="audit"><span class="dot"></span><div class="label">19. Security &amp; activity log</div><div class="desc">Logins, devices, and account access</div></li>
+      <li class="rail-step" data-view="grievance"><span class="dot"></span><div class="label">20. Grievance redressal</div><div class="desc">DPDP-mandated Data Protection Officer contact</div></li>
+      <li class="rail-step" data-view="roadmap"><span class="dot"></span><div class="label">21. What's next</div><div class="desc">24-month privacy roadmap preview</div></li>
+    </ul>
+    <div class="rail-note"><b>Note:</b> this demos the happy path end-to-end. Edge cases (declined consent, in-flight orders, minors on shared accounts) are covered in the PRD and deck.</div>
+  </div>
+
+  <!-- PHONE -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div style="position:relative; height:100%;">
+
+          <!-- 1. WELCOME -->
+          <div class="view active" id="view-welcome">
+            <div class="statusbar"><span>9:41</span><span>●●●● Zomato</span></div>
+            <div class="welcome-bg" style="flex:1;">
+              <div class="logo-mark">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2 L4 7 V12 C4 17 7.5 20.5 12 22 C16.5 20.5 20 17 20 12 V7 Z"/></svg>
+              </div>
+              <h1>Zomato</h1>
+              <p>Before we get started, let's set up your data &amp; privacy preferences — quick and specific, not a wall of legal text.</p>
+              <button class="btn" onclick="go('onboarding')">Continue</button>
+            </div>
+          </div>
+
+          <!-- 2. PRIVACY ONBOARDING -->
+          <div class="view" id="view-onboarding">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('welcome')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Before you sign up</div>
+            </div>
+            <div class="view-body" style="display:flex; flex-direction:column; justify-content:center; flex:1;">
+              <div class="onb-card active" id="onb-1">
+                <div class="onb-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><path d="M12 21c4.5-2.5 7-6 7-10V6l-7-3-7 3v5c0 4 2.5 7.5 7 10z"/></svg></div>
+                <h3>We only ask for what we'll actually use</h3>
+                <p>No single "I accept" covering everything. Each toggle you'll see next maps to one specific purpose — order fulfilment, personalization, marketing, or partner sharing.</p>
+              </div>
+              <div class="onb-card" id="onb-2">
+                <div class="onb-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><circle cx="12" cy="10" r="3"/><path d="M12 21s7-6.5 7-11a7 7 0 10-14 0c0 4.5 7 11 7 11z"/></svg></div>
+                <h3>Location is asked when it's needed</h3>
+                <p>We won't ask for "Always allow" today. You'll only see a precise-location prompt the moment an order is actually being tracked.</p>
+              </div>
+              <div class="onb-card" id="onb-3">
+                <div class="onb-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 19h16"/></svg></div>
+                <h3>Change your mind anytime, instantly</h3>
+                <p>Every choice here lives in Privacy Hub. Download or delete your data yourself — no support ticket, no multi-day wait.</p>
+              </div>
+              <div class="onb-dots"><span class="on" data-i="0"></span><span data-i="1"></span><span data-i="2"></span></div>
+              <div style="padding:0 26px;">
+                <button class="btn btn-primary" onclick="onbNext()" id="onbBtn">Next</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. CONSENT (signup) -->
+          <div class="view" id="view-consent">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar"><div class="tb-title">Your privacy, your call</div></div>
+            <div class="view-body">
+              <div style="padding:0 18px 4px;">
+                <p style="font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 4px;">Choose what Zomato can use your data for. You can change any of this later in Privacy Hub.</p>
+              </div>
+              <div style="padding:8px 18px 0;">
+                <div class="consent-item">
+                  <div class="toggle on locked"></div>
+                  <div>
+                    <div class="ci-title">Order fulfilment <span class="badge badge-amber" style="margin-left:6px;">Required</span></div>
+                    <div class="ci-desc">Delivery address, live location during an order, and payment processing.</div>
+                  </div>
+                </div>
+                <div class="consent-item">
+                  <div class="toggle" id="tg-personalization" onclick="toggle(this)"></div>
+                  <div>
+                    <div class="ci-title">Personalization</div>
+                    <div class="ci-desc">Use your order history to recommend restaurants and dishes.</div>
+                  </div>
+                </div>
+                <div class="consent-item">
+                  <div class="toggle" id="tg-marketing" onclick="toggle(this)"></div>
+                  <div>
+                    <div class="ci-title">Marketing</div>
+                    <div class="ci-desc">Offers and updates over app notifications, SMS, or WhatsApp.</div>
+                  </div>
+                </div>
+                <div class="consent-item">
+                  <div class="toggle" id="tg-partners" onclick="toggle(this)"></div>
+                  <div>
+                    <div class="ci-title">Partner sharing</div>
+                    <div class="ci-desc">Share your name and order details with the restaurant preparing your food.</div>
+                  </div>
+                </div>
+              </div>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-primary" onclick="confirmSignupConsent()">Confirm &amp; continue</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. HOME -->
+          <div class="view" id="view-home">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="home-header">
+              <div>
+                <div style="font-size:11px; color:var(--muted); font-weight:600;">DELIVER TO</div>
+                <div style="font-size:14px; font-weight:700;">HSR Layout, Bengaluru</div>
+              </div>
+              <div class="avatar" onclick="go('account')">P</div>
+            </div>
+            <div class="view-body">
+              <div class="search-pill">
+                <svg class="icon" style="width:15px;height:15px;" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                Search restaurants and dishes
+              </div>
+              <div class="rest-card">
+                <div class="rest-img"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.6"><path d="M4 11a8 8 0 0116 0"/><path d="M2 11h20l-1.5 8h-17z"/></svg></div>
+                <div class="rest-info"><div class="name">Great South Kitchen</div><div class="meta">4.4 ★ · 30 min · South Indian</div></div>
+              </div>
+              <div class="rest-card">
+                <div class="rest-img" style="background:linear-gradient(135deg,#E8F8F1,#D6F2E5);"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="1.6"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/></svg></div>
+                <div class="rest-info"><div class="name">Fresh Bowl Co.</div><div class="meta">4.6 ★ · 22 min · Healthy</div></div>
+              </div>
+              <div class="rest-card">
+                <div class="rest-img" style="background:linear-gradient(135deg,#FDF3E3,#FBE7C4);"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#E8A33D" stroke-width="1.6"><path d="M12 2l2.5 6.5L21 9l-5 4.5L17.5 21 12 17l-5.5 4L8 13.5 3 9l6.5-.5z"/></svg></div>
+                <div class="rest-info"><div class="name">Biryani House</div><div class="meta">4.3 ★ · 35 min · Hyderabadi</div></div>
+              </div>
+              <p style="text-align:center; font-size:11px; color:var(--muted); margin:10px 0 0;">Tap your avatar above ↑ to open Account</p>
+            </div>
+          </div>
+
+          <!-- 4. ACCOUNT -->
+          <div class="view" id="view-account">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('home')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Account</div>
+            </div>
+            <div class="view-body">
+              <div style="padding:6px 18px 16px; display:flex; align-items:center; gap:12px;">
+                <div class="avatar" style="width:48px;height:48px;font-size:17px;">P</div>
+                <div><div style="font-weight:700; font-size:15px;">Priya S.</div><div style="font-size:11.5px; color:var(--muted);">priya•••@gmail.com</div></div>
+              </div>
+              <div class="acc-item"><div class="acc-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#3A4450" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><div class="acc-label">Profile details</div><span class="chev">›</span></div>
+              <div class="acc-item"><div class="acc-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#3A4450" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 9h16"/></svg></div><div class="acc-label">Payments</div><span class="chev">›</span></div>
+              <div class="acc-item" onclick="go('privacyhub')"><div class="acc-icon privacy"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><path d="M12 2 L5 6 V11 C5 15.5 8 19 12 21 C16 19 19 15.5 19 11 V6 Z"/></svg></div><div class="acc-label">Privacy Hub</div><span class="chev">›</span></div>
+              <div class="acc-item"><div class="acc-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#3A4450" stroke-width="1.8"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><div class="acc-label">Order history</div><span class="chev">›</span></div>
+              <div class="acc-item"><div class="acc-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#3A4450" stroke-width="1.8"><path d="M12 22s8-4.5 8-11V5l-8-3-8 3v6c0 6.5 8 11 8 11z"/></svg></div><div class="acc-label">Help &amp; support</div><span class="chev">›</span></div>
+              <div class="acc-item" style="cursor:default;"><div class="acc-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#3A4450" stroke-width="1.8"><path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.4-6.4l-1.4 1.4M7 17l-1.4 1.4M18.4 18.4L17 17M7 7L5.6 5.6"/><circle cx="12" cy="12" r="4"/></svg></div><div class="acc-label">Dark mode</div><div class="toggle" id="tg-dark" onclick="toggleDarkMode(this)"></div></div>
+            </div>
+          </div>
+
+          <!-- 6. PRIVACY HUB -->
+          <div class="view" id="view-privacyhub">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('account')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Privacy Hub</div>
+              <div class="bell-btn" onclick="toggleNotif(true)"><span class="bell-dot"></span><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="1.8"><path d="M6 8a6 6 0 0112 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg></div>
+            </div>
+            <div class="view-body">
+              <div class="score-wrap">
+                <div class="ring"><div class="ring-inner"><div class="num">87</div><div class="lbl">TRUST SCORE</div></div></div>
+                <div class="score-caption">All essentials covered. Your consent is current and purpose-specific.</div>
+              </div>
+              <div class="badge-row">
+                <div class="pbadge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Full transparency</div>
+                <div class="pbadge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Quick responder</div>
+              </div>
+              <div class="section-label">Understand</div>
+              <div class="hub-grid">
+                <div class="hub-tile" onclick="go('dashboard')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.8"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+                  <div class="ht-label">Privacy dashboard</div>
+                  <div class="ht-desc">What's behind your score</div>
+                </div>
+                <div class="hub-tile" onclick="go('datamap')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="1.8"><circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="19" r="2.4"/><circle cx="19" cy="19" r="2.4"/><path d="M12 7.4V13M12 13L6.5 17M12 13l5.5 4"/></svg></div>
+                  <div class="ht-label">Live data flow map</div>
+                  <div class="ht-desc">Who holds your data now</div>
+                </div>
+              </div>
+              <div class="section-label">Manage</div>
+              <div class="hub-grid">
+                <div class="hub-tile" onclick="go('manage')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><path d="M4 6h6M4 12h10M4 18h6"/><circle cx="14" cy="6" r="2"/><circle cx="18" cy="18" r="2"/></svg></div>
+                  <div class="ht-label">Manage consent</div>
+                  <div class="ht-desc">Toggle each purpose on or off</div>
+                </div>
+                <div class="hub-tile" onclick="go('location')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#E8A33D" stroke-width="1.8"><circle cx="12" cy="10" r="3"/><path d="M12 21s7-6.5 7-11a7 7 0 10-14 0c0 4.5 7 11 7 11z"/></svg></div>
+                  <div class="ht-label">Location controls</div>
+                  <div class="ht-desc">Contextual, not always-on</div>
+                </div>
+                <div class="hub-tile" onclick="go('marketing')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><path d="M3 8l9 6 9-6M4 5h16v14H4z"/></svg></div>
+                  <div class="ht-label">Marketing controls</div>
+                  <div class="ht-desc">By channel: push, SMS, email</div>
+                </div>
+                <div class="hub-tile" onclick="go('restaurant')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.8"><path d="M4 11a8 8 0 0116 0"/><path d="M2 11h20l-1.5 8h-17z"/></svg></div>
+                  <div class="ht-label">Restaurant sharing</div>
+                  <div class="ht-desc">Field-level, per partner</div>
+                </div>
+                <div class="hub-tile" onclick="go('delivery')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="1.8"><path d="M3 13h13V6H3zM16 9h3l3 4v4h-6z"/><circle cx="7" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></svg></div>
+                  <div class="ht-label">Delivery sharing</div>
+                  <div class="ht-desc">Masked number, live window</div>
+                </div>
+                <div class="hub-tile" onclick="go('ledger')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#E8A33D" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg></div>
+                  <div class="ht-label">Sharing ledger</div>
+                  <div class="ht-desc">Every disclosure, logged</div>
+                </div>
+              </div>
+              <div class="section-label">Your data &amp; account</div>
+              <div class="hub-grid">
+                <div class="hub-tile" onclick="go('download')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 19h16"/></svg></div>
+                  <div class="ht-label">Download my data</div>
+                  <div class="ht-desc">Self-serve export</div>
+                </div>
+                <div class="hub-tile" onclick="go('delete')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></div>
+                  <div class="ht-label">Delete my data</div>
+                  <div class="ht-desc">Self-serve erasure</div>
+                </div>
+                <div class="hub-tile" onclick="go('receipts')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="1.8"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/></svg></div>
+                  <div class="ht-label">Consent timeline</div>
+                  <div class="ht-desc">Receipts for every decision</div>
+                </div>
+                <div class="hub-tile" onclick="go('audit')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/></svg></div>
+                  <div class="ht-label">Security &amp; activity</div>
+                  <div class="ht-desc">Logins and devices</div>
+                </div>
+                <div class="hub-tile" onclick="go('grievance')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#E8A33D" stroke-width="1.8"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg></div>
+                  <div class="ht-label">Grievance redressal</div>
+                  <div class="ht-desc">Reach our DPO directly</div>
+                </div>
+                <div class="hub-tile" onclick="go('roadmap')">
+                  <div class="ht-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+                  <div class="ht-label">What's next</div>
+                  <div class="ht-desc">Our privacy roadmap</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notifications overlay -->
+            <div class="notif-panel" id="notifPanel">
+              <div class="topbar">
+                <div class="back-btn" onclick="toggleNotif(false)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+                <div class="tb-title">Privacy notifications</div>
+              </div>
+              <div class="view-body">
+                <div class="notif-item"><div class="ni-title">Marketing consent renews soon</div><div class="ni-desc">Your marketing opt-in is reconfirmed yearly under DPDP. We'll ask again on 12 Aug.</div><div class="ni-time">2 hours ago</div></div>
+                <div class="notif-item"><div class="ni-title">New restaurant partner sharing</div><div class="ni-desc">Great South Kitchen can now see your allergy notes for your last order — you can turn this off anytime.</div><div class="ni-time">Yesterday</div></div>
+                <div class="notif-item"><div class="ni-title">Data export ready</div><div class="ni-desc">Your last "Download my data" request was delivered instantly, with no ticket.</div><div class="ni-time">3 days ago</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. PRIVACY DASHBOARD -->
+          <div class="view" id="view-dashboard">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Privacy dashboard</div>
+            </div>
+            <div class="view-body">
+              <div class="stat-grid">
+                <div class="stat-tile"><div class="st-num">91.4%</div><div class="st-lbl">Valid current consent</div><span class="st-delta up">▲ 2.1% this month</span></div>
+                <div class="stat-tile"><div class="st-num">96%</div><div class="st-lbl">Self-serve resolution</div><span class="st-delta up">▲ 4% this month</span></div>
+                <div class="stat-tile"><div class="st-num">31 hrs</div><div class="st-lbl">Avg. rights request time</div><span class="st-delta up">▼ from 5–7 days</span></div>
+                <div class="stat-tile"><div class="st-num">58%</div><div class="st-lbl">Personalization opt-in</div><span class="st-delta down">▼ 3% this month</span></div>
+              </div>
+              <div class="section-label">What makes up your score</div>
+              <div class="bar-block">
+                <div class="bar-row"><div class="bar-top"><span class="bt-label">Consent freshness</span><span class="bt-val">98/100</span></div><div class="bar-track"><div class="bar-fill" style="width:98%;"></div></div></div>
+                <div class="bar-row"><div class="bar-top"><span class="bt-label">Data minimization</span><span class="bt-val">82/100</span></div><div class="bar-track"><div class="bar-fill" style="width:82%; background:#2F6FED;"></div></div></div>
+                <div class="bar-row"><div class="bar-top"><span class="bt-label">Rights response speed</span><span class="bt-val">95/100</span></div><div class="bar-track"><div class="bar-fill" style="width:95%;"></div></div></div>
+                <div class="bar-row"><div class="bar-top"><span class="bt-label">Third-party disclosure clarity</span><span class="bt-val">73/100</span></div><div class="bar-track"><div class="bar-fill" style="width:73%; background:#E8A33D;"></div></div></div>
+              </div>
+              <div style="padding:6px 18px 0;">
+                <div class="card">
+                  <div class="ci-title" style="margin-bottom:5px;">Why 87, not 100?</div>
+                  <div class="ci-desc">Partner-sharing clarity is your lowest sub-score — some restaurant partners still use broad "order details" language instead of itemized fields. That's next on our roadmap.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. LIVE DATA FLOW MAP -->
+          <div class="view" id="view-datamap">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Live data flow map</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px; font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 4px;">Tap anyone below to see exactly what they hold and why.</p>
+              <div class="flow-you">YOU<br>Priya S.</div>
+              <div class="flow-stem"></div>
+              <div class="flow-list">
+                <div class="flow-node" onclick="expandFlow(this)">
+                  <div class="fn-icon"><svg class="icon" style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><path d="M12 2 L4 7 V12 C4 17 7.5 20.5 12 22 C16.5 20.5 20 17 20 12 V7 Z"/></svg></div>
+                  <div style="flex:1;"><div class="fn-title">Zomato (data controller)</div><div class="fn-sub">Profile, orders, location during delivery</div></div>
+                  <span class="badge badge-emerald">Active</span>
+                  <div class="flow-detail">Holds your account since 14 Feb 2024. Used for order fulfilment and, if you've opted in, personalization. This is the only party that always has your data.</div>
+                </div>
+                <div class="flow-node" onclick="expandFlow(this)">
+                  <div class="fn-icon"><svg class="icon" style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="#2F6FED" stroke-width="1.8"><path d="M4 11a8 8 0 0116 0"/><path d="M2 11h20l-1.5 8h-17z"/></svg></div>
+                  <div style="flex:1;"><div class="fn-title">Restaurant partners</div><div class="fn-sub">Name, order items, allergy notes</div></div>
+                  <span class="badge badge-emerald">Active</span>
+                  <div class="flow-detail">Shared only for the duration of an active order, with whichever restaurant you order from. Deleted from the partner's queue once delivered, per our data-sharing agreement.</div>
+                </div>
+                <div class="flow-node" onclick="expandFlow(this)">
+                  <div class="fn-icon"><svg class="icon" style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="1.8"><path d="M3 13h13V6H3zM16 9h3l3 4v4h-6z"/><circle cx="7" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></svg></div>
+                  <div style="flex:1;"><div class="fn-title">Delivery partner</div><div class="fn-sub">Masked number, live location</div></div>
+                  <span class="badge badge-emerald">Active</span>
+                  <div class="flow-detail">Your phone number is masked via a proxy number. Live location is visible only from "order picked up" to "delivered," then access is revoked automatically.</div>
+                </div>
+                <div class="flow-node paused" onclick="expandFlow(this)">
+                  <div class="fn-icon"><svg class="icon" style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="#8A93A0" stroke-width="1.8"><path d="M3 8l9 6 9-6M4 5h16v14H4z"/></svg></div>
+                  <div style="flex:1;"><div class="fn-title">Marketing &amp; ad partners</div><div class="fn-sub">No data currently shared</div></div>
+                  <span class="badge badge-amber">Paused</span>
+                  <div class="flow-detail">You've turned Marketing off in Manage consent, so nothing is shared with ad or campaign partners. Turning it on again would share only your device ID and order category, never payment details.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 9. PRIVACY NUTRITION LABEL -->
+          <div class="view" id="view-nutrition">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Privacy nutrition label</div>
+            </div>
+            <div class="view-body">
+              <div class="nutri-head"><p style="font-size:12px; color:var(--muted); line-height:1.5; margin:0;">For your last order from <b>Great South Kitchen</b> — exactly what was collected, and who saw it.</p></div>
+              <div class="nutri-table">
+                <div class="nutri-title-row">Data used for this order</div>
+                <div class="nutri-row"><div><div class="nr-name">Delivery address</div><div class="nr-tag">Required · order fulfilment</div></div><span>Zomato, delivery partner</span></div>
+                <div class="nutri-row"><div><div class="nr-name">Live location</div><div class="nr-tag">Required · while order is active</div></div><span>Zomato, delivery partner</span></div>
+                <div class="nutri-row"><div><div class="nr-name">Order items &amp; allergy notes</div><div class="nr-tag">Required · order fulfilment</div></div><span>Zomato, restaurant</span></div>
+                <div class="nutri-row"><div><div class="nr-name">Payment method</div><div class="nr-tag">Required · order fulfilment</div></div><span>Zomato, payment processor</span></div>
+                <div class="nutri-row"><div><div class="nr-name">Order history pattern</div><div class="nr-tag">Optional · personalization (on)</div></div><span>Zomato only</span></div>
+                <div class="nutri-row"><div><div class="nr-name">Device ID for ads</div><div class="nr-tag">Optional · marketing (off)</div></div><span style="color:var(--emerald); font-weight:700;">Not shared</span></div>
+                <div class="nutri-foot">Generated automatically from your current consent settings at checkout — DPDP-aligned itemized notice, not a bundled disclaimer.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 10. MANAGE CONSENT -->
+          <div class="view" id="view-manage">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Manage consent</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px; font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 8px;">Change your mind anytime — withdrawing is as easy as giving consent.</p>
+              <div style="padding:0 18px;">
+                <div class="consent-item">
+                  <div class="toggle on locked"></div>
+                  <div><div class="ci-title">Order fulfilment <span class="badge badge-amber" style="margin-left:6px;">Required</span></div><div class="ci-desc">Needed to place and deliver any order.</div></div>
+                </div>
+                <div class="consent-item">
+                  <div class="toggle on" id="tg-m-personalization" onclick="toggle(this)"></div>
+                  <div><div class="ci-title">Personalization</div><div class="ci-desc">Recommendations from your order history.</div></div>
+                </div>
+                <div class="consent-item">
+                  <div class="toggle" id="tg-m-marketing" onclick="toggle(this)"></div>
+                  <div><div class="ci-title">Marketing</div><div class="ci-desc">Offers over notifications, SMS, WhatsApp.</div></div>
+                </div>
+                <div class="consent-item">
+                  <div class="toggle" id="tg-m-partners" onclick="toggle(this)"></div>
+                  <div><div class="ci-title">Partner sharing</div><div class="ci-desc">Name and order details shared with restaurants.</div></div>
+                </div>
+              </div>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-primary" onclick="saveManage()">Save changes</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 11. LOCATION CONTROLS -->
+          <div class="view" id="view-location">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Location controls</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px; font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 10px;">When can Zomato see your location?</p>
+              <div class="choice-card" onclick="selectChoice(this)"><div class="choice-radio"></div><div><div class="cc-title">Always</div><div class="cc-desc">Not recommended — broader than DPDP's "necessary" standard for this purpose.</div></div></div>
+              <div class="choice-card selected" onclick="selectChoice(this)"><div class="choice-radio"></div><div><div class="cc-title">Only while an order is active</div><div class="cc-desc">Access starts at "order picked up" and ends at "delivered."</div></div></div>
+              <div class="choice-card" onclick="selectChoice(this)"><div class="choice-radio"></div><div><div class="cc-title">Never</div><div class="cc-desc">You'll enter your delivery address manually every time.</div></div></div>
+              <div class="section-label">Precision</div>
+              <div style="padding:0 18px;">
+                <div class="consent-item">
+                  <div class="toggle on" onclick="toggle(this)"></div>
+                  <div><div class="ci-title">Precise location</div><div class="ci-desc">Off shares only your general area — may reduce delivery accuracy.</div></div>
+                </div>
+              </div>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-primary" onclick="go('privacyhub'); setTimeout(()=>showToast('Location preference saved'),320);">Save changes</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12. MARKETING CONTROLS -->
+          <div class="view" id="view-marketing">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Marketing controls</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px; font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 4px;">Marketing is off overall. Channel toggles below only apply if you turn it back on.</p>
+              <div style="padding:8px 18px 0;">
+                <div class="consent-item"><div class="toggle" onclick="toggle(this)"></div><div><div class="ci-title">App notifications</div><div class="ci-desc">Offers and personalized deals inside the app.</div></div></div>
+                <div class="consent-item"><div class="toggle" onclick="toggle(this)"></div><div><div class="ci-title">SMS</div><div class="ci-desc">Text messages for time-limited offers.</div></div></div>
+                <div class="consent-item"><div class="toggle" onclick="toggle(this)"></div><div><div class="ci-title">WhatsApp</div><div class="ci-desc">Order-linked promos over WhatsApp Business.</div></div></div>
+                <div class="consent-item"><div class="toggle" onclick="toggle(this)"></div><div><div class="ci-title">Email</div><div class="ci-desc">Weekly digest of nearby offers.</div></div></div>
+              </div>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-primary" onclick="go('privacyhub'); setTimeout(()=>showToast('Marketing channels saved'),320);">Save changes</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 13. RESTAURANT SHARING -->
+          <div class="view" id="view-restaurant">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Restaurant sharing</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px; font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 4px;">What any restaurant partner sees for an order — field by field.</p>
+              <div style="padding:8px 18px 0;">
+                <div class="consent-item"><div class="toggle on locked"></div><div><div class="ci-title">Name &amp; order items <span class="badge badge-amber" style="margin-left:6px;">Required</span></div><div class="ci-desc">Needed to prepare and label the order.</div></div></div>
+                <div class="consent-item"><div class="toggle on" onclick="toggle(this)"></div><div><div class="ci-title">Allergy &amp; dietary notes</div><div class="ci-desc">Shared so the kitchen can accommodate them.</div></div></div>
+                <div class="consent-item"><div class="toggle" onclick="toggle(this)"></div><div><div class="ci-title">Order frequency at this restaurant</div><div class="ci-desc">Lets the partner recognize repeat customers.</div></div></div>
+                <div class="consent-item"><div class="toggle" onclick="toggle(this)"></div><div><div class="ci-title">Ratings you've left elsewhere</div><div class="ci-desc">Off by default — not needed to fulfil an order.</div></div></div>
+              </div>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-primary" onclick="go('privacyhub'); setTimeout(()=>showToast('Restaurant sharing updated'),320);">Save changes</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 14. DELIVERY PARTNER SHARING -->
+          <div class="view" id="view-delivery">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Delivery partner sharing</div>
+            </div>
+            <div class="view-body">
+              <div style="padding:0 18px;">
+                <div class="card">
+                  <div class="ci-title" style="margin-bottom:6px;">Your number is always masked</div>
+                  <div class="ci-desc">Delivery partners call and message through a temporary proxy number that expires when the order is marked delivered. They never see your real number.</div>
+                </div>
+              </div>
+              <div style="padding:10px 18px 0;">
+                <div class="consent-item"><div class="toggle on locked"></div><div><div class="ci-title">Live location <span class="badge badge-amber" style="margin-left:6px;">Required</span></div><div class="ci-desc">Visible only from pickup to delivery.</div></div></div>
+                <div class="consent-item"><div class="toggle on" onclick="toggle(this)"></div><div><div class="ci-title">Delivery instructions</div><div class="ci-desc">Gate code, landmark, or drop-off notes.</div></div></div>
+                <div class="consent-item"><div class="toggle" onclick="toggle(this)"></div><div><div class="ci-title">Rate this partner publicly</div><div class="ci-desc">Off — your rating stays anonymous to the partner by default.</div></div></div>
+              </div>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-primary" onclick="go('privacyhub'); setTimeout(()=>showToast('Delivery sharing updated'),320);">Save changes</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 15. THIRD-PARTY SHARING LEDGER -->
+          <div class="view" id="view-ledger">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Sharing ledger</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px; font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 10px;">Every time your data left Zomato, logged automatically.</p>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Great South Kitchen — order items, allergy notes</div><span class="badge badge-emerald">Fulfilment</span></div><div class="r-time">Today, 1:42 PM</div></div>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Delivery partner — live location, proxy number</div><span class="badge badge-emerald">Fulfilment</span></div><div class="r-time">Today, 1:44 PM</div></div>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Payment processor — payment token</div><span class="badge badge-emerald">Fulfilment</span></div><div class="r-time">Today, 1:42 PM</div></div>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Fresh Bowl Co. — order items</div><span class="badge badge-emerald">Fulfilment</span></div><div class="r-time">2 days ago</div></div>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Ad partners</div><span class="badge badge-amber">None — marketing is off</span></div><div class="r-time">No records</div></div>
+            </div>
+          </div>
+
+          <!-- 16. DOWNLOAD MY DATA -->
+          <div class="view" id="view-download">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Download my data</div>
+            </div>
+            <div class="view-body" id="download-body">
+              <div style="padding:0 18px;">
+                <div class="card">
+                  <div class="ci-title" style="margin-bottom:6px;">What's included</div>
+                  <div class="ci-desc">Profile details, order history, saved addresses, and your current consent record — packaged as a single file.</div>
+                </div>
+              </div>
+              <div style="padding:14px 18px 0;">
+                <div class="row" style="padding:4px 0;"><span style="font-size:12.5px; color:var(--muted);">Format</span><span style="font-size:12.5px; font-weight:700;">JSON + PDF summary</span></div>
+                <div class="row" style="padding:4px 0;"><span style="font-size:12.5px; color:var(--muted);">Delivered to</span><span style="font-size:12.5px; font-weight:700;">priya•••@gmail.com</span></div>
+                <div class="row" style="padding:4px 0;"><span style="font-size:12.5px; color:var(--muted);">Typical wait</span><span style="font-size:12.5px; font-weight:700; color:var(--emerald);">Instant — no ticket needed</span></div>
+              </div>
+              <div style="padding:20px 18px 0;">
+                <button class="btn btn-primary" onclick="requestDownload()">Request download</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. DELETE MY DATA -->
+          <div class="view" id="view-delete">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Delete my data</div>
+            </div>
+            <div class="view-body" id="delete-body">
+              <div style="padding:0 18px;">
+                <div class="card" style="background:var(--amber-tint);">
+                  <div class="ci-title" style="margin-bottom:6px; color:#8A5A17;">Before you continue</div>
+                  <div class="ci-desc" style="color:#8A5A17;">This removes your profile, saved addresses, and order history. Orders currently in progress will finish first — this doesn't affect this demo's happy path.</div>
+                </div>
+              </div>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-danger-outline" onclick="requestDelete()">Confirm deletion request</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 9. RECEIPTS -->
+          <div class="view" id="view-receipts">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Consent receipts</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px; font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 10px;">Exactly what you agreed to, and when.</p>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Personalization — On</div><span class="badge badge-emerald">Current</span></div><div class="r-time">Updated just now</div></div>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Order fulfilment — On</div><span class="badge badge-emerald">Current</span></div><div class="r-time">Since account creation</div></div>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Marketing — Off</div><span class="badge badge-emerald">Current</span></div><div class="r-time">Since account creation</div></div>
+              <div class="receipt-item"><div class="r-top"><div class="r-purpose">Partner sharing — Off</div><span class="badge badge-emerald">Current</span></div><div class="r-time">Since account creation</div></div>
+            </div>
+          </div>
+
+          <!-- 19. SECURITY & ACTIVITY LOG -->
+          <div class="view" id="view-audit">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Security &amp; activity</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px 4px; font-size:12px; color:var(--muted); line-height:1.5;">Recognize everything here? If not, end a session or reach out to us.</p>
+              <div class="audit-item"><div class="au-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="1.8"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10 18h4"/></svg></div><div style="flex:1;"><div class="au-title">Signed in · iPhone 14, Bengaluru</div><div class="au-sub">This device · active now</div></div><span class="badge badge-emerald">This device</span></div>
+              <div class="audit-item"><div class="au-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#3A4450" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8"/></svg></div><div style="flex:1;"><div class="au-title">Signed in · Chrome, Windows</div><div class="au-sub">Mumbai · 3 days ago</div></div></div>
+              <div class="audit-item"><div class="au-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#3A4450" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg></div><div style="flex:1;"><div class="au-title">Password changed</div><div class="au-sub">14 days ago</div></div></div>
+              <div class="audit-item"><div class="au-icon"><svg class="icon" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="#3A4450" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 19h16"/></svg></div><div style="flex:1;"><div class="au-title">Data export delivered</div><div class="au-sub">3 days ago</div></div></div>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-danger-outline" onclick="showToast('All other sessions signed out')">Sign out other devices</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 20. GRIEVANCE REDRESSAL -->
+          <div class="view" id="view-grievance">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">Grievance redressal</div>
+            </div>
+            <div class="view-body" id="grievance-body">
+              <div class="officer-card">
+                <div class="officer-avatar"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#E23744" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+                <div><div class="ci-title">Grievance Officer, Zomato</div><div class="ci-desc">DPDP Act, 2023 mandates a named contact for data-related complaints. Response within 30 days, in writing.</div></div>
+              </div>
+              <p style="padding:0 18px; font-size:11.5px; color:var(--muted); margin:0 0 8px;">Tell us what went wrong — a declined consent that wasn't honored, a delayed data request, or anything else.</p>
+              <textarea class="g-input" placeholder="e.g. I requested deletion 10 days ago and haven't received confirmation..."></textarea>
+              <div style="padding:16px 18px 0;">
+                <button class="btn btn-primary" onclick="submitGrievance()">Submit grievance</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 21. ROADMAP PREVIEW -->
+          <div class="view" id="view-roadmap">
+            <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+            <div class="topbar">
+              <div class="back-btn" onclick="go('privacyhub')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1F2933" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="tb-title">What's next</div>
+            </div>
+            <div class="view-body">
+              <p style="padding:0 18px; font-size:12px; color:var(--muted); line-height:1.5; margin:0 0 12px;">Privacy Hub keeps growing. Here's what's planned.</p>
+              <div class="rm-item"><div class="rm-quarter"><div class="rq-tag">Q3</div><div class="rm-line"></div></div><div class="rm-body"><div class="rm-h">AI Privacy Copilot v2</div><div class="rm-p">Plain-language answers about any past order's data trail, not just canned questions.</div></div></div>
+              <div class="rm-item"><div class="rm-quarter"><div class="rq-tag">Q4</div><div class="rm-line"></div></div><div class="rm-body"><div class="rm-h">Unified consent — Zomato, Blinkit, District</div><div class="rm-p">One purpose-wise consent record shared (with your permission) across the group.</div></div></div>
+              <div class="rm-item"><div class="rm-quarter"><div class="rq-tag">Q1</div><div class="rm-line"></div></div><div class="rm-body"><div class="rm-h">Verifiable parental consent</div><div class="rm-p">A dedicated flow for shared family devices, so minors' orders get an extra consent layer.</div></div></div>
+              <div class="rm-item"><div class="rm-quarter"><div class="rq-tag">Q2</div></div><div class="rm-body"><div class="rm-h">Privacy-preserving personalization</div><div class="rm-p">On-device recommendation scoring, so raw order history never has to leave your phone.</div></div></div>
+            </div>
+          </div>
+
+          <div class="toast" id="toast"><div class="tick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div><span id="toast-text">Saved</span></div>
+
+          <!-- FLOATING AI PRIVACY ASSISTANT -->
+          <div class="assistant-fab" id="assistantFab" onclick="toggleAssistant(true)" style="display:none;">
+            <div class="ping"></div>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M12 2a4 4 0 00-4 4v2a4 4 0 008 0V6a4 4 0 00-4-4z"/><path d="M6 12v1a6 6 0 0012 0v-1M12 19v3M9 22h6"/></svg>
+          </div>
+          <div class="assistant-panel" id="assistantPanel">
+            <div class="asst-head">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M12 2a4 4 0 00-4 4v2a4 4 0 008 0V6a4 4 0 00-4-4z"/><path d="M6 12v1a6 6 0 0012 0v-1M12 19v3M9 22h6"/></svg>
+              <div><div class="ah-title">AI Privacy Assistant</div><div class="ah-sub">Answers only from your actual settings — never guesses</div></div>
+              <div class="asst-close" onclick="toggleAssistant(false)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            </div>
+            <div class="asst-body" id="asstBody">
+              <div class="chat-row bot"><div class="chat-bubble">Hi Priya 👋 Ask me anything about your data — or tap a suggestion below.</div></div>
+            </div>
+            <div class="chip-row" id="asstChips">
+              <div class="chip" onclick="asstAsk('location')">Who has my location data?</div>
+              <div class="chip" onclick="asstAsk('ad')">Why am I seeing this offer?</div>
+              <div class="chip" onclick="asstAsk('delete')">How do I delete my account?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const order = ['welcome','onboarding','consent','home','account','privacyhub','dashboard','datamap','nutrition',
+    'manage','location','marketing','restaurant','delivery','ledger','download','delete','receipts','audit','grievance','roadmap'];
+
+  let lastManageState = null;
+
+  const preAccountScreens = ['welcome','onboarding','consent'];
+
+  function go(name){
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    updateRail(name);
+    toggleNotif(false);
+    toggleAssistant(false);
+    const fab = document.getElementById('assistantFab');
+    if (fab) fab.style.display = preAccountScreens.includes(name) ? 'none' : 'flex';
+  }
+
+  function updateRail(name){
+    const idx = order.indexOf(name);
+    document.querySelectorAll('.rail-step').forEach(step => {
+      const stepIdx = order.indexOf(step.dataset.view);
+      step.classList.remove('active','done');
+      if (stepIdx === idx) step.classList.add('active');
+      else if (stepIdx < idx) step.classList.add('done');
+    });
+  }
+
+  document.querySelectorAll('.rail-step').forEach(step => {
+    step.addEventListener('click', () => go(step.dataset.view));
+  });
+
+  function toggle(el){
+    if (el.classList.contains('locked')) return;
+    el.classList.toggle('on');
+  }
+
+  function showToast(text){
+    const t = document.getElementById('toast');
+    document.getElementById('toast-text').textContent = text;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function confirmSignupConsent(){
+    // mirror signup toggles into the manage screen so state feels continuous
+    ['personalization','marketing','partners'].forEach(k => {
+      const src = document.getElementById('tg-' + k);
+      const dst = document.getElementById('tg-m-' + k);
+      if (src.classList.contains('on')) dst.classList.add('on'); else dst.classList.remove('on');
+    });
+    go('home');
+  }
+
+  function saveManage(){
+    // snapshot current state so "Undo" can restore it
+    lastManageState = ['personalization','marketing','partners'].map(k => {
+      const el = document.getElementById('tg-m-' + k);
+      return { id: el.id, on: el.classList.contains('on') };
+    });
+    go('privacyhub');
+    setTimeout(() => showToastUndo('Consent updated'), 320);
+  }
+
+  function showToastUndo(text){
+    const t = document.getElementById('toast');
+    document.getElementById('toast-text').innerHTML = text + ' <span style="text-decoration:underline; cursor:pointer; margin-left:6px;" onclick="undoManage()">Undo</span>';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  function undoManage(){
+    if (!lastManageState) return;
+    // this demo snapshot represents the state *before* the last change conceptually flipped back
+    lastManageState.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el) el.classList.toggle('on');
+    });
+    document.getElementById('toast').classList.remove('show');
+    showToast('Change undone');
+  }
+
+  /* ---------- Onboarding ---------- */
+  let onbIdx = 0;
+  function onbNext(){
+    const cards = ['onb-1','onb-2','onb-3'];
+    document.getElementById(cards[onbIdx]).classList.remove('active');
+    onbIdx++;
+    if (onbIdx >= cards.length){
+      onbIdx = 0;
+      go('consent');
+      return;
+    }
+    document.getElementById(cards[onbIdx]).classList.add('active');
+    document.querySelectorAll('.onb-dots span').forEach((d,i) => d.classList.toggle('on', i === onbIdx));
+    document.getElementById('onbBtn').textContent = onbIdx === cards.length - 1 ? "Let's go" : 'Next';
+  }
+
+  /* ---------- Data flow map ---------- */
+  function expandFlow(el){
+    const wasOpen = el.classList.contains('expanded');
+    document.querySelectorAll('.flow-node').forEach(n => n.classList.remove('expanded'));
+    if (!wasOpen) el.classList.add('expanded');
+  }
+
+  /* ---------- Location choice cards ---------- */
+  function selectChoice(el){
+    el.parentElement.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  /* ---------- Notifications ---------- */
+  function toggleNotif(show){
+    const panel = document.getElementById('notifPanel');
+    if (!panel) return;
+    panel.classList.toggle('show', show);
+  }
+
+  /* ---------- Dark mode ---------- */
+  function toggleDarkMode(el){
+    el.classList.toggle('on');
+    document.querySelector('.screen').classList.toggle('dark', el.classList.contains('on'));
+  }
+
+  /* ---------- Grievance ---------- */
+  function submitGrievance(){
+    const body = document.getElementById('grievance-body');
+    body.innerHTML = `
+      <div class="success-wrap" style="height:100%;">
+        <div class="success-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <h3>Grievance logged</h3>
+        <p>Reference #ZP-48213. Our Grievance Officer will respond within 30 days as required under the DPDP Act — most requests resolve much sooner.</p>
+        <button class="btn btn-ghost" onclick="go('privacyhub')">Done</button>
+      </div>`;
+  }
+
+  /* ---------- AI Privacy Assistant ---------- */
+  function toggleAssistant(show){
+    const panel = document.getElementById('assistantPanel');
+    const fab = document.getElementById('assistantFab');
+    if (!panel) return;
+    panel.classList.toggle('show', show);
+    fab.style.opacity = show ? '0' : '1';
+    fab.style.pointerEvents = show ? 'none' : 'auto';
+  }
+
+  const asstAnswers = {
+    location: "Right now: Zomato and your active delivery partner. Location is shared only from pickup to delivery, and no one else — not restaurants, not ad partners — receives it.",
+    ad: "This offer used your personalization consent (currently On) and your order-history pattern only. It did not use your device ID or precise location. You can turn personalization off anytime in Manage consent.",
+    delete: "Go to Privacy Hub → Delete my data → Confirm deletion request. It's instant to submit — your data is erased once any active order completes, and you'll get an email confirmation."
+  };
+  const asstQuestions = {
+    location: 'Who has my location data?',
+    ad: 'Why am I seeing this offer?',
+    delete: 'How do I delete my account?'
+  };
+
+  function asstAsk(key){
+    const bodyEl = document.getElementById('asstBody');
+    bodyEl.insertAdjacentHTML('beforeend', `<div class="chat-row user"><div class="chat-bubble">${asstQuestions[key]}</div></div>`);
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+    setTimeout(() => {
+      bodyEl.insertAdjacentHTML('beforeend', `<div class="chat-row bot"><div class="chat-bubble">${asstAnswers[key]}</div></div>`);
+      bodyEl.scrollTop = bodyEl.scrollHeight;
+    }, 420);
+    // remove the used chip so the conversation feels like it's progressing
+    const chips = document.getElementById('asstChips');
+    const chipEls = Array.from(chips.children);
+    const idx = Object.keys(asstQuestions).indexOf(key);
+    if (chipEls[idx]) chipEls[idx].remove();
+  }
+
+  function requestDownload(){
+    const body = document.getElementById('download-body');
+    body.innerHTML = `
+      <div class="success-wrap" style="height:100%;">
+        <div class="success-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <h3>Request received</h3>
+        <p>We're preparing your export now. It'll land in priya•••@gmail.com shortly — no ticket, no waiting on support.</p>
+        <button class="btn btn-ghost" onclick="go('privacyhub')">Done</button>
+      </div>`;
+  }
+
+  function requestDelete(){
+    const body = document.getElementById('delete-body');
+    body.innerHTML = `
+      <div class="success-wrap" style="height:100%;">
+        <div class="success-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0E9F6E" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <h3>Deletion requested</h3>
+        <p>Your data will be erased once any active order completes. You'll get a confirmation email when it's done.</p>
+        <button class="btn btn-ghost" onclick="go('privacyhub')">Done</button>
+      </div>`;
+  }
+
+  updateRail('welcome');
+</script>
+</body>
+</html>

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Consent, Uncomplicated — Clickable Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#000000; --white:#FFFFFF;
+    --near-black:#1A1A1A; --off:#F6F6F6;
+    --grey-100:#EEEEEE; --grey-200:#E2E2E2; --grey-300:#D8D8D8; --grey-400:#BDBDBD;
+    --grey-500:#8A8A8A; --grey-700:#545454;
+    --green:#06C167; --green-tint:#E3F7EC; --green-dark:#04512B;
+    --red:#E11900; --red-tint:#FCEAE8;
+    --amber:#7A4E00; --amber-tint:#FDF0DA;
+    --radius:16px;
+    --shadow-xs:0 1px 2px rgba(0,0,0,.06);
+    --shadow-sm:0 2px 8px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+    --shadow-md:0 8px 24px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+    --shadow-lg:0 24px 48px rgba(0,0,0,.22), 0 6px 16px rgba(0,0,0,.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%;}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--off); display:flex; flex-direction:column; align-items:center;
+    min-height:100vh; color:var(--black); padding:26px 14px 50px;
+  }
+  h1,h2,h3{margin:0; font-weight:800; letter-spacing:-0.02em;}
+
+  .intro{max-width:480px; text-align:center; margin-bottom:20px;}
+  .intro .eyebrow{font-size:11px; letter-spacing:2.5px; font-weight:800; color:var(--green-dark); text-transform:uppercase;}
+  .intro h1{font-size:27px; margin-top:7px;}
+  .intro p{font-size:13.5px; color:var(--grey-700); margin-top:8px; line-height:1.55; font-weight:500;}
+
+  .stepper{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; max-width:680px; margin-bottom:24px;}
+  .step-chip{
+    font-size:10.5px; padding:6px 11px; border-radius:20px; background:var(--white);
+    border:1.5px solid var(--grey-200); color:var(--grey-700); cursor:pointer; font-weight:700;
+    transition:all .15s ease; user-select:none;
+  }
+  .step-chip:hover{border-color:var(--black);}
+  .step-chip.active{background:var(--black); color:var(--white); border-color:var(--black);}
+  .step-chip.done{color:var(--green-dark); border-color:var(--green);}
+
+  .device{
+    width:390px; max-width:96vw; height:812px; max-height:84vh;
+    background:var(--black); border-radius:46px; padding:12px;
+    box-shadow:var(--shadow-lg);
+    position:relative;
+  }
+  .notch{
+    position:absolute; top:12px; left:50%; transform:translateX(-50%);
+    width:126px; height:28px; background:var(--black); border-radius:0 0 18px 18px; z-index:30;
+  }
+  .screen{
+    width:100%; height:100%; background:var(--white); border-radius:34px; overflow:hidden;
+    position:relative; display:flex; flex-direction:column;
+  }
+  .screen-content{flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; display:flex; flex-direction:column;}
+  .screen-content::-webkit-scrollbar{display:none;}
+
+  .statusbar{height:36px; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:12px; font-weight:700; flex-shrink:0;}
+
+  .topbar{display:flex; align-items:center; gap:12px; padding:6px 18px 16px; flex-shrink:0;}
+  .topbar .backbtn{
+    width:36px; height:36px; border-radius:50%; background:var(--grey-100); border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; flex-shrink:0;
+  }
+  .topbar .title{font-size:17px; font-weight:800;}
+
+  button{font-family:inherit; cursor:pointer;}
+  .btn{
+    width:100%; padding:16px; border-radius:8px; border:none; font-weight:700; font-size:15px;
+    display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .08s ease, opacity .15s ease, background .12s ease;
+  }
+  .btn:active{transform:scale(0.985);}
+  .btn-primary{background:var(--black); color:var(--white);}
+  .btn-primary:hover{background:#222;}
+  .btn-primary:disabled{background:var(--grey-300); color:var(--grey-500); cursor:not-allowed;}
+  .btn-green{background:var(--green); color:var(--white);}
+  .btn-outline{background:transparent; border:1.5px solid var(--black); color:var(--black);}
+  .btn-ghost{background:transparent; color:var(--grey-700); font-weight:700;}
+  .btn-danger{background:var(--red); color:var(--white);}
+  .btn-danger-outline{background:transparent; border:1.5px solid var(--red); color:var(--red);}
+
+  .px{padding-left:22px; padding-right:22px;}
+
+  .card{background:var(--white); border-radius:14px; padding:16px; border:1px solid var(--grey-200); box-shadow:var(--shadow-xs); transition:box-shadow .15s ease, border-color .15s ease, background .12s ease;}
+  .card + .card{margin-top:10px;}
+  .card.tap{cursor:pointer;}
+  .card.tap:hover{box-shadow:var(--shadow-sm); border-color:var(--grey-300);}
+  .card.tap:active{background:var(--grey-100); box-shadow:var(--shadow-xs);}
+  .ride-option.selected-ride{border-color:var(--black); background:var(--grey-100); box-shadow:var(--shadow-sm);}
+
+  .field{
+    width:100%; padding:16px; border-radius:10px; border:1.5px solid var(--grey-200);
+    font-size:15px; font-family:inherit; font-weight:600; background:var(--white); margin-top:10px;
+  }
+  .field:focus{outline:none; border-color:var(--black);}
+
+  .toggle{
+    width:48px; height:28px; border-radius:16px; background:var(--grey-300, #D8D8D8); position:relative; flex-shrink:0;
+    transition:background .18s ease; border:none; padding:0;
+  }
+  .toggle.on{background:var(--black);}
+  .toggle.required{opacity:.55; cursor:not-allowed;}
+  .toggle .knob{
+    width:22px; height:22px; border-radius:50%; background:var(--white); position:absolute; top:3px; left:3px;
+    transition:left .18s ease; box-shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  .toggle.on .knob{left:23px;}
+
+  .purpose-row{display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid var(--grey-100);}
+  .purpose-row:last-child{border-bottom:none;}
+  .purpose-row .meta{flex:1; min-width:0;}
+  .purpose-row .meta .name{font-weight:700; font-size:13.5px;}
+  .purpose-row .meta .desc{font-size:11.5px; color:var(--grey-700); margin-top:2px; line-height:1.42; font-weight:500;}
+  .purpose-row .meta .updated{font-size:10px; color:var(--grey-500); margin-top:4px; font-weight:600;}
+
+  .badge{font-size:10px; font-weight:800; padding:3px 9px; border-radius:20px; display:inline-block;}
+  .badge-green{background:var(--green-tint); color:var(--green-dark);}
+  .badge-amber{background:var(--amber-tint); color:var(--amber);}
+  .badge-grey{background:var(--grey-100); color:var(--grey-700);}
+  .badge-black{background:var(--black); color:var(--white);}
+
+  .fade-in{animation:fadeIn .22s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);}}
+
+  .map-hero{height:230px; background:radial-gradient(120% 100% at 30% 0%, #232323 0%, #141414 55%, #0a0a0a 100%); position:relative; flex-shrink:0; overflow:hidden; flex:none;}
+  .map-hero svg{position:absolute; inset:0; width:100%; height:100%;}
+  .map-pin{width:14px; height:14px; background:var(--white); border-radius:3px; position:absolute; box-shadow:0 2px 10px rgba(0,0,0,.4); transform:rotate(45deg);}
+  .map-pin.you{border-radius:50%; background:var(--green); border:3px solid #fff; transform:none;}
+  .map-pin.you::after{content:''; position:absolute; inset:-8px; border-radius:50%; background:var(--green); opacity:.3; animation:pulseRing 1.9s ease-out infinite;}
+
+  .sheet{background:var(--white); border-radius:22px 22px 0 0; margin-top:-20px; position:relative; z-index:5; padding:18px 20px 0; flex:1; display:flex; flex-direction:column; min-height:0; box-shadow:0 -8px 20px rgba(0,0,0,.06);}
+  .drag-handle{width:36px; height:4px; border-radius:4px; background:var(--grey-300); margin:0 auto 12px;}
+
+  .bottomnav{display:flex; border-top:1px solid var(--grey-100); background:var(--white); flex-shrink:0;}
+  .bottomnav .navitem{flex:1; padding:10px 0 12px; text-align:center; font-size:10px; font-weight:700; color:var(--grey-400); cursor:pointer; transition:color .12s ease;}
+  .bottomnav .navitem.active{color:var(--black);}
+  .bottomnav .navitem .ic{display:flex; justify-content:center; margin-bottom:3px;}
+
+  .modal-overlay{position:absolute; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:flex-end; z-index:50; border-radius:34px; backdrop-filter:blur(1px);}
+  .modal-sheet{background:var(--white); width:100%; border-radius:20px 20px 0 0; padding:22px; animation:slideUp .22s cubic-bezier(.22,.9,.35,1); box-shadow:0 -16px 32px rgba(0,0,0,.18);}
+  @keyframes slideUp{from{transform:translateY(26px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+
+  .center-icon{width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto;}
+
+  .toast{
+    position:absolute; bottom:96px; left:20px; right:20px; background:var(--near-black); color:var(--white);
+    padding:13px 16px; border-radius:10px; font-size:12.5px; font-weight:700; z-index:60;
+    display:flex; align-items:center; gap:9px; animation:slideUp .18s ease; box-shadow:var(--shadow-md);
+  }
+  .toast .toast-ic{color:var(--green); flex-shrink:0; display:flex;}
+
+  .hint{text-align:center; font-size:11px; color:var(--grey-500); margin-top:16px; max-width:400px; font-weight:500;}
+
+  input[type="text"]{font-family:inherit;}
+
+  /* avatars */
+  .avatar{border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; background:linear-gradient(135deg,#2b2b2b,#000); box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08), var(--shadow-xs); flex-shrink:0;}
+
+  /* icon badges */
+  .icon-badge{width:38px; height:38px; border-radius:10px; background:var(--grey-100); display:flex; align-items:center; justify-content:center; color:var(--black); flex-shrink:0;}
+
+  /* live-tracking pulse */
+  .pulse-dot{width:10px; height:10px; border-radius:50%; background:var(--green); position:relative; flex-shrink:0;}
+  .pulse-dot::after{content:''; position:absolute; inset:-6px; border-radius:50%; background:var(--green); opacity:.35; animation:pulseRing 1.7s ease-out infinite;}
+  @keyframes pulseRing{0%{transform:scale(.5); opacity:.55;} 100%{transform:scale(2.1); opacity:0;}}
+
+  /* skeleton loading */
+  .skeleton{background:linear-gradient(90deg, var(--grey-100) 25%, var(--grey-200) 37%, var(--grey-100) 63%); background-size:400% 100%; animation:shimmer 1.4s ease infinite; border-radius:8px;}
+  @keyframes shimmer{0%{background-position:100% 50%;} 100%{background-position:0 50%;}}
+
+  /* focus visibility */
+  button:focus-visible, .toggle:focus-visible, input:focus-visible, .card.tap:focus-visible{
+    outline:2px solid var(--black); outline-offset:2px; border-radius:8px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+  }
+
+  /* Full-screen native feel on real mobile devices */
+  @media (max-width: 480px), (max-height: 760px) and (pointer:coarse){
+    body{padding:0;}
+    .intro, .stepper, .hint{display:none;}
+    .device{
+      width:100vw; height:100dvh; max-width:none; max-height:none; border-radius:0; padding:0;
+      box-shadow:none;
+    }
+    .notch{display:none;}
+    .screen{border-radius:0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="eyebrow">Deliverable 2 — Clickable Prototype</div>
+  <h1>Consent, Uncomplicated</h1>
+  <p>Uber-inspired UI, happy-path only. Every element below is live — toggles actually update state, choices carry through the flow, and nothing dead-ends.</p>
+</div>
+
+<div class="stepper" id="stepper"></div>
+
+<div class="device">
+  <div class="notch"></div>
+  <div class="screen" id="screen"></div>
+</div>
+
+<p class="hint">Built to demonstrate the end-to-end happy path per assignment scope — edge cases (declined consent, minors, failed payments) are covered in the deck's Risks &amp; Edge Cases slide rather than built here.</p>
+
+<script>
+const STEPS = [
+  {id:'splash', label:'Splash'},
+  {id:'login', label:'Login'},
+  {id:'otp', label:'OTP'},
+  {id:'consent', label:'Consent Notice'},
+  {id:'home', label:'Home'},
+  {id:'booking', label:'Book Ride'},
+  {id:'permission', label:'Location Permission'},
+  {id:'trip', label:'Trip'},
+  {id:'hub', label:'Privacy Hub'},
+  {id:'dashboard', label:'Consent Dashboard'},
+  {id:'download', label:'Download Data'},
+  {id:'delete', label:'Delete Data'},
+  {id:'history', label:'Consent History'},
+  {id:'activity', label:'Activity'},
+];
+
+const ICON_PATHS = {
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  'map-pin': '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  car: '<path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/>',
+  auto: '<path d="M4 15.5l1-5.2A2 2 0 0 1 6.95 8.7h5.6a2 2 0 0 1 1.9 1.4L15.5 13.5"/><rect x="3" y="13.5" width="13.5" height="4.5" rx="1.4"/><circle cx="6.3" cy="19" r="1.4"/><circle cx="13.7" cy="19" r="1.4"/><path d="M16.5 13.5H19a1.5 1.5 0 0 1 1.5 1.5v2"/>',
+  radar: '<circle cx="12" cy="12" r="1.8"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  link: '<path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/>',
+  megaphone: '<path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M14.5 8.5a3.5 3.5 0 0 1 0 7"/><path d="M17.5 6a6.5 6.5 0 0 1 0 12"/>',
+  list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  sliders: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  scale: '<line x1="12" y1="3" x2="12" y2="21"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M5 7h14"/><path d="M9 21h6"/>',
+  mail: '<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  'arrow-left': '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  'chevron-right': '<polyline points="9 18 15 12 9 6"/>',
+  battery: '<rect x="1" y="7" width="17" height="10" rx="2.5"/><line x1="21.5" y1="10.5" x2="21.5" y2="13.5"/><rect x="3.5" y="9.5" width="10" height="6" rx="1" fill="currentColor" stroke="none"/>',
+  signal: '<line x1="3" y1="18" x2="3" y2="15"/><line x1="8" y1="18" x2="8" y2="11"/><line x1="13" y1="18" x2="13" y2="7"/><line x1="18" y1="18" x2="18" y2="3"/>',
+  'alert-triangle': '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  'check-circle': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+};
+function icon(name, size, strokeWidth){
+  size = size || 18; strokeWidth = strokeWidth || 1.8;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" style="display:block;">${ICON_PATHS[name]||''}</svg>`;
+}
+
+const RIDE_OPTIONS = [
+  {id:'ubergo', icon:'car', name:'UberGo', eta:'4 min away', fare:184, car:'White Swift', plate:'KA 05 AB 1234'},
+  {id:'premier', icon:'car', name:'Premier', eta:'3 min away', fare:256, car:'Black Verna', plate:'KA 03 CD 5678'},
+  {id:'auto', icon:'auto', name:'Auto', eta:'6 min away', fare:96, car:'Bajaj Auto', plate:'KA 51 EF 9012'},
+];
+
+let state = {
+  screen: 'splash',
+  furthest: 0,
+  phone: '98765 43210',
+  destination: 'Indiranagar Metro Station',
+  savedPlace: null,
+  selectedRide: 'ubergo',
+  tripActive: false,
+  tripEnded: false,
+  purposes: {
+    ridelocation: true,
+    bglocation: false,
+    contacts: true,
+    marketing: false,
+    thirdparty: false,
+    ads: false,
+  },
+  toast: null,
+  modal: null,
+};
+
+const PURPOSE_META = {
+  ridelocation: {icon:'map-pin', name:'Location while riding', desc:'Used only during an active trip to match you with a driver and track the route.', required:true},
+  bglocation: {icon:'radar', name:'Background location', desc:'Optional — improves pickup accuracy and safety monitoring after a trip ends.'},
+  contacts: {icon:'users', name:'Contacts for SOS', desc:'Lets you pick trusted contacts to notify during an emergency. Not used for anything else.'},
+  marketing: {icon:'bell', name:'Marketing notifications', desc:'Promotions, offers, and product updates sent to you directly.'},
+  thirdparty: {icon:'link', name:'Third-party ride data sharing', desc:'Anonymised trip data shared with city transit partners for traffic planning.'},
+  ads: {icon:'megaphone', name:'Ad personalisation', desc:'Uses your ride patterns to tailor ads you see elsewhere.'},
+};
+
+function goTo(id){
+  state.modal = null;
+  state.screen = id;
+  const idx = STEPS.findIndex(s=>s.id===id);
+  if(idx > state.furthest) state.furthest = idx;
+  render();
+  const inner = document.getElementById('screen');
+  if(inner) inner.scrollTop = 0;
+}
+function toast(msg){
+  state.toast = msg;
+  render();
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>{ state.toast=null; render(); }, 2200);
+}
+function togglePurpose(key, btn){
+  const m = PURPOSE_META[key];
+  if(m.required){ toast("Required for ride matching — can't be turned off"); return; }
+  state.purposes[key] = !state.purposes[key];
+  const isOn = state.purposes[key];
+
+  // Surgical patch: update just this toggle + its row, so the switch actually
+  // animates instead of snapping via a full innerHTML rebuild.
+  if(btn){
+    btn.classList.toggle('on', isOn);
+    const row = btn.closest('.purpose-row');
+    const updatedEl = row && row.querySelector('.updated');
+    if(updatedEl) updatedEl.textContent = (isOn ? 'Granted' : 'Withdrawn') + ' \u00B7 updated just now';
+  } else {
+    render();
+  }
+
+  // Patch any live counters visible on the current screen.
+  const enabled = Object.values(state.purposes).filter(Boolean).length;
+  const total = Object.keys(state.purposes).length;
+  const consentSummary = document.getElementById('consentSummaryText');
+  if(consentSummary) consentSummary.textContent = `${enabled} of ${total} purposes enabled. Change any of these anytime from Privacy Hub — withdrawal takes one tap, same as granting.`;
+  const dashSummary = document.getElementById('dashboardSummaryText');
+  if(dashSummary) dashSummary.textContent = `${enabled} of ${total} purposes currently granted.`;
+}
+
+function selectRide(id){
+  state.selectedRide = id;
+  const r = RIDE_OPTIONS.find(x=>x.id===id);
+  document.querySelectorAll('.ride-option').forEach(card=>{
+    const active = card.dataset.ride === id;
+    card.classList.toggle('selected-ride', active);
+    const badge = card.querySelector('.ride-badge');
+    if(badge) badge.style.display = active ? 'inline-block' : 'none';
+  });
+  const confirmBtn = document.getElementById('confirmRideBtn');
+  if(confirmBtn) confirmBtn.textContent = `Confirm ${r.name} · \u20B9${r.fare}`;
+}
+
+function pickPlace(name){
+  state.destination = name;
+  state.savedPlace = name;
+  goTo('booking');
+}
+function updateDestination(val){
+  state.destination = val;
+}
+
+function renderStepper(){
+  const el = document.getElementById('stepper');
+  el.innerHTML = STEPS.map((s,i)=>{
+    const cls = ['step-chip'];
+    if(s.id===state.screen) cls.push('active');
+    else if(i<=state.furthest) cls.push('done');
+    return `<div class="${cls.join(' ')}" onclick="goTo('${s.id}')">${i+1}. ${s.label}</div>`;
+  }).join('');
+}
+
+function statusbar(dark){
+  return `<div class="statusbar" style="color:${dark?'#fff':'#000'}"><span>9:41</span><span style="display:flex; align-items:center; gap:5px;">${icon('signal',13)} 5G ${icon('battery',15)}</span></div>`;
+}
+function topbar(title, back){
+  return `<div class="topbar px">
+    ${back? `<div class="backbtn" onclick="goTo('${back}')">←</div>` : ''}
+    <div class="title">${title}</div>
+  </div>`;
+}
+function bottomnav(active){
+  const items = [['home','home','Home'],['hub','shield','Privacy'],['activity','list','Activity']];
+  return `<div class="bottomnav">
+    ${items.map(([id,ic,label])=>`<div class="navitem ${active===id?'active':''}" onclick="goTo('${id}')"><span class="ic">${icon(ic,19)}</span>${label}</div>`).join('')}
+  </div>`;
+}
+
+const SCREENS = {
+
+splash(){
+  return `<div class="screen-content fade-in" style="align-items:center; justify-content:center; height:100%; background:var(--black); color:var(--white);">
+    <div style="width:66px; height:66px; border-radius:16px; background:var(--white); display:flex; align-items:center; justify-content:center; color:var(--black); margin-bottom:20px;">${icon('car',32,1.6)}</div>
+    <div style="font-size:23px; font-weight:900; letter-spacing:-0.03em;">rideshare</div>
+    <div style="font-size:11px; color:var(--grey-400); margin-top:6px; letter-spacing:2px; font-weight:700;">MOVE WITH TRUST</div>
+    <button class="btn btn-primary" style="width:210px; margin-top:46px; background:var(--white); color:var(--black);" onclick="goTo('login')">Get started</button>
+  </div>`;
+},
+
+login(){
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    <div class="px" style="margin-top:26px; flex:1;">
+      <h2 style="font-size:25px;">What's your number?</h2>
+      <p style="font-size:13px; color:var(--grey-700); margin-top:8px; font-weight:500;">We'll text a code to verify it's you. Standard rates apply.</p>
+      <input class="field" id="phoneInput" type="text" value="+91 ${state.phone}" oninput="state.phone=this.value">
+      <button class="btn btn-primary" style="margin-top:22px;" onclick="goTo('otp')">Continue</button>
+      <p style="font-size:10.5px; color:var(--grey-500); margin-top:14px; line-height:1.5; font-weight:500;">By continuing you agree to our Terms. What we do with your data is covered next — in plain language, not just a link.</p>
+    </div>
+  </div>`;
+},
+
+otp(){
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    ${topbar('Verify code','login')}
+    <div class="px" style="margin-top:10px; flex:1;">
+      <p style="font-size:13px; color:var(--grey-700); font-weight:500;">Code sent to +91 ${state.phone}</p>
+      <div style="display:flex; gap:8px; margin-top:16px;">
+        ${[4,2,8,1].map((d,i)=>`<div onclick="toast('Code field '+(${i}+1))" style="flex:1; height:56px; border:1.5px solid var(--grey-200); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:21px; font-weight:800; background:var(--white); cursor:pointer;">${d}</div>`).join('')}
+      </div>
+      <button class="btn btn-primary" style="margin-top:24px;" onclick="goTo('consent')">Verify &amp; continue</button>
+      <button class="btn btn-ghost" onclick="toast('New code sent')">Resend code</button>
+    </div>
+  </div>`;
+},
+
+consent(){
+  const summaryOn = Object.entries(state.purposes).filter(([k,v])=>v).length;
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    <div class="px" style="margin-top:20px;">
+      <div class="badge badge-black">NOTICE · DPDP ACT, 2023</div>
+      <h2 style="font-size:21px; margin-top:12px; line-height:1.28;">Before you ride — here's what we collect, and why</h2>
+      <p style="font-size:12.5px; color:var(--grey-700); margin-top:8px; line-height:1.5; font-weight:500;">One line per purpose. Everything is optional except what's needed to safely match you with a driver.</p>
+
+      <div class="card" style="margin-top:16px;">
+        ${Object.entries(state.purposes).map(([k,v])=>{
+          const m = PURPOSE_META[k];
+          return `<div class="purpose-row">
+            <div class="icon-badge">${icon(m.icon, 18)}</div>
+            <div class="meta">
+              <div class="name">${m.name} ${m.required?'<span class="badge badge-grey" style="margin-left:4px;">Required</span>':''}</div>
+              <div class="desc">${m.desc}</div>
+            </div>
+            <button class="toggle ${v?'on':''} ${m.required?'required':''}" onclick="togglePurpose('${k}', this)"><div class="knob"></div></button>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <p id="consentSummaryText" style="font-size:10.5px; color:var(--grey-500); margin-top:10px; font-weight:600;">${summaryOn} of ${Object.keys(state.purposes).length} purposes enabled. Change any of these anytime from Privacy Hub — withdrawal takes one tap, same as granting.</p>
+
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="toast('Consent saved — logged with timestamp'); setTimeout(()=>goTo('home'),650)">Save &amp; continue</button>
+      <button class="btn btn-ghost" onclick="goTo('home')">Accept required only, skip customizing</button>
+    </div>
+  </div>`;
+},
+
+home(){
+  return `<div class="screen-content fade-in">
+    ${statusbar(true)}
+    <div class="map-hero">
+      <svg viewBox="0 0 390 230"><path d="M0,120 C80,90 140,160 220,110 S340,60 390,100" stroke="#3d3d3d" stroke-width="3" fill="none"/><path d="M0,60 C100,40 180,90 260,50 S360,20 390,40" stroke="#2a2a2a" stroke-width="2" fill="none"/></svg>
+      <div class="map-pin you" style="top:112px; left:184px;"></div>
+      <div style="position:absolute; top:16px; left:20px; right:20px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="color:#fff; font-weight:800; font-size:15px;">Good evening, Ananya</div>
+        <div onclick="goTo('hub')" style="width:36px; height:36px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; font-weight:800; color:var(--black); box-shadow:var(--shadow-sm);">AR</div>
+      </div>
+    </div>
+    <div class="sheet">
+      <div class="drag-handle"></div>
+      <h2 style="font-size:20px;">Where to?</h2>
+      <div class="card tap" style="margin-top:12px;" onclick="goTo('booking')">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="color:var(--grey-700);">${icon('search',18)}</div>
+          <div style="color:var(--grey-700); font-size:13.5px; font-weight:600;">Enter destination</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <div class="card tap" style="flex:1; text-align:center; padding:14px;" onclick="pickPlace('Home — HSR Layout')"><div style="color:var(--black);">${icon('home',22)}</div><div style="font-size:11px; font-weight:700; margin-top:6px;">Home</div></div>
+        <div class="card tap" style="flex:1; text-align:center; padding:14px;" onclick="pickPlace('Work — Prestige Tech Park')"><div style="color:var(--black);">${icon('briefcase',22)}</div><div style="font-size:11px; font-weight:700; margin-top:6px;">Work</div></div>
+      </div>
+      <div class="card tap" style="margin-top:14px; display:flex; align-items:center; gap:12px; background:var(--grey-100); border:none;" onclick="goTo('hub')">
+        <div style="color:var(--black);">${icon('shield',20)}</div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px; font-weight:700;">Your Privacy Hub</div>
+          <div style="font-size:10.5px; color:var(--grey-700); font-weight:500;">${Object.values(state.purposes).filter(Boolean).length} purposes active · reviewed today</div>
+        </div>
+        <div>›</div>
+      </div>
+      <div style="flex:1; min-height:8px;"></div>
+      ${bottomnav('home')}
+    </div>
+  </div>`;
+},
+
+booking(){
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    ${topbar('Confirm your ride','home')}
+    <div class="px">
+      <div class="card">
+        <div style="display:flex; gap:10px; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--grey-100);">
+          <div style="width:8px; height:8px; border-radius:50%; background:var(--black);"></div>
+          <div style="font-size:13px; font-weight:600;">Koramangala 5th Block</div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; padding-top:10px;">
+          <div style="width:8px; height:8px; border-radius:2px; background:var(--black);"></div>
+          <input class="field" style="margin:0; padding:0; border:none; font-size:13px;" value="${state.destination}" oninput="updateDestination(this.value)">
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        ${RIDE_OPTIONS.map(r=>`
+          <div class="card tap ride-option ${state.selectedRide===r.id?'selected-ride':''}" data-ride="${r.id}" style="margin-top:8px; display:flex; align-items:center; gap:12px;" onclick="selectRide('${r.id}')">
+            <div class="icon-badge" style="width:44px;height:44px;">${icon(r.icon, 22)}</div>
+            <div style="flex:1;">
+              <div style="font-weight:700; font-size:13.5px;">${r.name}</div>
+              <div style="font-size:11px; color:var(--grey-700); font-weight:500;">${r.eta} · ₹${r.fare}</div>
+            </div>
+            <div class="badge badge-black ride-badge" style="display:${state.selectedRide===r.id?'inline-block':'none'};">Selected</div>
+          </div>`).join('')}
+      </div>
+      <button id="confirmRideBtn" class="btn btn-primary" style="margin-top:16px;" onclick="goTo('permission')">Confirm ${RIDE_OPTIONS.find(r=>r.id===state.selectedRide).name} · ₹${RIDE_OPTIONS.find(r=>r.id===state.selectedRide).fare}</button>
+    </div>
+  </div>`;
+},
+
+permission(){
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    <div class="px" style="margin-top:10px; opacity:.6; pointer-events:none;">
+      <h2 style="font-size:18px;">Finding your driver…</h2>
+      <div class="card" style="margin-top:16px; display:flex; align-items:center; gap:12px;">
+        <div class="skeleton" style="width:46px; height:46px; border-radius:50%; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div class="skeleton" style="height:13px; width:65%; margin-bottom:8px;"></div>
+          <div class="skeleton" style="height:11px; width:45%;"></div>
+        </div>
+      </div>
+      <div class="skeleton" style="height:100px; margin-top:12px;"></div>
+    </div>
+    <div class="modal-overlay">
+      <div class="modal-sheet">
+        <div class="center-icon" style="background:var(--grey-100); color:var(--black);">${icon('map-pin',28,1.6)}</div>
+        <h3 style="text-align:center; font-size:17px; margin-top:14px;">Share live location for this ride?</h3>
+        <p style="text-align:center; font-size:12.5px; color:var(--grey-700); margin-top:8px; line-height:1.5; font-weight:500;">Used only to match your ${RIDE_OPTIONS.find(r=>r.id===state.selectedRide).name} driver and track this trip to ${state.destination}. Turns off automatically when the ride ends — asked fresh each time, not stored as an always-on permission.</p>
+        <button class="btn btn-primary" style="margin-top:18px;" onclick="toast('Location shared for this trip only'); state.tripActive=true; setTimeout(()=>goTo('trip'),600)">Share for this ride</button>
+        <button class="btn btn-ghost" onclick="state.tripActive=true; goTo('trip')">Just once</button>
+      </div>
+    </div>
+  </div>`;
+},
+
+trip(){
+  return `<div class="screen-content fade-in">
+    ${statusbar(true)}
+    <div class="map-hero" style="height:340px;">
+      <svg viewBox="0 0 390 340"><path d="M40,300 C90,220 120,180 200,150 S320,80 350,40" stroke="#3d3d3d" stroke-width="3" fill="none"/></svg>
+      <div class="map-pin" style="top:36px; left:336px;"></div>
+      <div style="position:absolute; top:16px; left:20px;"><div class="backbtn" style="background:#fff;" onclick="goTo('home')">←</div></div>
+    </div>
+    <div class="sheet" style="margin-top:-22px;">
+      <div class="drag-handle"></div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="avatar" style="width:46px; height:46px; font-size:14px;">RK</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:14px;">Ravi K. · 4.92 ${icon('star',12,0)}</div>
+          <div style="font-size:11.5px; color:var(--grey-700); font-weight:500;">${RIDE_OPTIONS.find(r=>r.id===state.selectedRide).car} · ${RIDE_OPTIONS.find(r=>r.id===state.selectedRide).plate}</div>
+        </div>
+        <div class="badge badge-black">2 min</div>
+      </div>
+      <div style="font-size:12px; color:var(--grey-700); font-weight:600; margin-top:10px;">Heading to ${state.destination}</div>
+      <div class="card" style="margin-top:12px; display:flex; align-items:center; gap:10px; background:var(--green-tint); border:none;">
+        <div class="pulse-dot"></div>
+        <div style="font-size:11.5px; flex:1; font-weight:600; color:var(--green-dark);">Live location active for this trip only — switches off automatically on arrival.</div>
+      </div>
+      <div style="flex:1; min-height:8px;"></div>
+      <button class="btn btn-primary" style="margin-bottom:18px;" onclick="toast('Trip completed'); state.tripActive=false; state.tripEnded=true; setTimeout(()=>goTo('home'),650)">Simulate: End trip</button>
+    </div>
+  </div>`;
+},
+
+hub(){
+  const items = [
+    {id:'dashboard', icon:'sliders', title:'Consent Dashboard', desc:'Review and change what you\u2019ve allowed, by purpose'},
+    {id:'download', icon:'download', title:'Download my data', desc:'Get a copy of your ride, payment, and account data'},
+    {id:'delete', icon:'trash', title:'Delete my data', desc:'Permanently erase your account and personal data'},
+    {id:'history', icon:'clock', title:'Consent history', desc:'A timestamped log of every consent change you\u2019ve made'},
+  ];
+  const activeCount = Object.values(state.purposes).filter(Boolean).length;
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    ${topbar('Privacy Hub','home')}
+    <div class="px" style="flex:1;">
+      <div class="card" style="background:var(--black); border:none; color:#fff; display:flex; align-items:center; gap:12px;">
+        <div style="color:var(--white);">${icon('shield',22)}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:13.5px;">Privacy health: Good</div>
+          <div style="font-size:10.5px; color:var(--grey-400); margin-top:2px; font-weight:500;">${activeCount} of 6 purposes active, all reviewed within 90 days</div>
+        </div>
+      </div>
+      ${items.map(it=>`
+        <div class="card tap" style="margin-top:10px; display:flex; align-items:center; gap:12px;" onclick="goTo('${it.id}')">
+          <div class="icon-badge">${icon(it.icon, 18)}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:13.5px;">${it.title}</div>
+            <div style="font-size:11px; color:var(--grey-700); margin-top:2px; font-weight:500;">${it.desc}</div>
+          </div>
+          <div style="color:var(--grey-400);">›</div>
+        </div>`).join('')}
+      <div class="card tap" style="margin-top:10px; display:flex; align-items:center; gap:12px;" onclick="toast('Grievance Officer contact copied')">
+        <div class="icon-badge">${icon('scale', 18)}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:13.5px;">Grievance Officer</div>
+          <div style="font-size:11px; color:var(--grey-700); margin-top:2px; font-weight:500;">privacy-grievance@rideshare.in · SLA: 30 days</div>
+        </div>
+      </div>
+      <div style="flex:1; min-height:10px;"></div>
+    </div>
+    ${bottomnav('hub')}
+  </div>`;
+},
+
+dashboard(){
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    ${topbar('Consent Dashboard','hub')}
+    <div class="px">
+      <p id="dashboardSummaryText" style="font-size:12px; color:var(--grey-700); margin-top:-6px; margin-bottom:12px; font-weight:600;">${Object.values(state.purposes).filter(Boolean).length} of ${Object.keys(state.purposes).length} purposes currently granted.</p>
+      <div class="card">
+        ${Object.entries(state.purposes).map(([k,v])=>{
+          const m = PURPOSE_META[k];
+          return `<div class="purpose-row">
+            <div class="icon-badge">${icon(m.icon, 18)}</div>
+            <div class="meta">
+              <div class="name">${m.name} ${m.required?'<span class="badge badge-grey" style="margin-left:4px;">Required</span>':''}</div>
+              <div class="desc">${m.desc}</div>
+              <div class="updated">${v ? 'Granted' : 'Withdrawn'} · updated just now, via this dashboard</div>
+            </div>
+            <button class="toggle ${v?'on':''} ${m.required?'required':''}" onclick="togglePurpose('${k}', this)"><div class="knob"></div></button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+},
+
+download(){
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    ${topbar('Download my data','hub')}
+    <div class="px">
+      <p style="font-size:12.5px; color:var(--grey-700); line-height:1.5; font-weight:500;">We'll compile your ride history, payment records, and account details into one file and email it to you.</p>
+      <div class="card" style="margin-top:14px;">
+        ${['Ride history','Payment records','Account & profile details','Consent history log'].map(t=>`
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 0;">
+            <div style="color:var(--green-dark); font-weight:800;">✓</div>
+            <div style="font-size:12.5px; font-weight:600;">${t}</div>
+          </div>`).join('')}
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="goTo('download-confirm')">Request download</button>
+    </div>
+  </div>`;
+},
+
+'download-confirm'(){
+  return `<div class="screen-content fade-in" style="align-items:center; justify-content:center; height:100%; text-align:center; padding:0 30px;">
+    <div class="center-icon" style="background:var(--green-tint); color:var(--green-dark);">${icon('mail',28,1.6)}</div>
+    <h3 style="font-size:18px; margin-top:16px;">Request received</h3>
+    <p style="font-size:12.5px; color:var(--grey-700); margin-top:8px; line-height:1.5; font-weight:500;">Your data export will be emailed to ananya.rao@email.com within 48 hours, as a secure link valid for 7 days.</p>
+    <button class="btn btn-primary" style="margin-top:22px; width:210px;" onclick="goTo('hub')">Back to Privacy Hub</button>
+  </div>`;
+},
+
+delete(){
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    ${topbar('Delete my data','hub')}
+    <div class="px">
+      <div class="card" style="background:var(--amber-tint); border:none;">
+        <div style="display:flex; gap:10px; align-items:flex-start;"><div style="color:var(--amber); flex-shrink:0; margin-top:1px;">${icon('alert-triangle',18)}</div><div style="font-size:12.5px; color:var(--amber); line-height:1.5; font-weight:600;">This permanently deletes your account, ride history, and saved payment details. This can't be undone.</div></div>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        ${['Account & profile','Ride history & ratings','Saved payment methods','Consent records (retained 6 months for legal proof, then purged)'].map(t=>`
+          <div style="display:flex; align-items:center; gap:10px; padding:9px 0;">
+            <div style="color:var(--red); font-weight:800;">•</div>
+            <div style="font-size:12px; font-weight:600;">${t}</div>
+          </div>`).join('')}
+      </div>
+      <button class="btn btn-danger-outline" style="margin-top:16px;" onclick="state.modal='delete'; render();">Delete my account &amp; data</button>
+    </div>
+    ${state.modal==='delete' ? `
+      <div class="modal-overlay">
+        <div class="modal-sheet">
+          <h3 style="font-size:16px;">Are you sure?</h3>
+          <p style="font-size:12.5px; color:var(--grey-700); margin-top:8px; font-weight:500;">This action can't be undone. Tap confirm to proceed.</p>
+          <button class="btn btn-danger" style="margin-top:14px;" onclick="state.modal=null; goTo('delete-confirm')">Confirm deletion</button>
+          <button class="btn btn-ghost" onclick="state.modal=null; render();">Cancel</button>
+        </div>
+      </div>` : ''}
+  </div>`;
+},
+
+'delete-confirm'(){
+  return `<div class="screen-content fade-in" style="align-items:center; justify-content:center; height:100%; text-align:center; padding:0 30px;">
+    <div class="center-icon" style="background:var(--amber-tint); color:var(--amber);">${icon('check-circle',30,1.6)}</div>
+    <h3 style="font-size:18px; margin-top:16px;">Deletion scheduled</h3>
+    <p style="font-size:12.5px; color:var(--grey-700); margin-top:8px; line-height:1.5; font-weight:500;">Your account and data will be permanently deleted within 30 days. You'll get a confirmation email once it's complete.</p>
+    <button class="btn btn-primary" style="margin-top:22px; width:210px;" onclick="goTo('splash')">Done</button>
+  </div>`;
+},
+
+history(){
+  const log = [
+    {t:'Today, 6:42 PM', e:'Location while riding — granted (required)', tag:'green'},
+    {t:'Today, 6:42 PM', e:'Contacts for SOS — granted', tag:'green'},
+    {t:'Today, 6:42 PM', e:'Marketing notifications — declined', tag:'grey'},
+    {t:'Today, 6:42 PM', e:'Background location — declined', tag:'grey'},
+    {t:'12 Mar 2026', e:'Ad personalisation — withdrawn by user', tag:'amber'},
+    {t:'03 Jan 2026', e:'Initial consent notice — accepted (4 of 6 purposes)', tag:'grey'},
+  ];
+  const dot = t => t==='green' ? 'var(--green)' : t==='amber' ? '#B98900' : 'var(--grey-400)';
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    ${topbar('Consent History','hub')}
+    <div class="px">
+      <div class="card">
+        ${log.map((l,i)=>`
+          <div style="display:flex; gap:10px; padding:11px 0; ${i<log.length-1?'border-bottom:1px solid var(--grey-100);':''}">
+            <div style="width:8px; height:8px; border-radius:50%; margin-top:5px; background:${dot(l.tag)}; flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-size:12.5px; font-weight:700;">${l.e}</div>
+              <div style="font-size:10.5px; color:var(--grey-500); margin-top:2px; font-weight:600;">${l.t}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <p style="font-size:10.5px; color:var(--grey-500); margin-top:10px; text-align:center; font-weight:500;">Full audit log — exportable via Download my data.</p>
+    </div>
+  </div>`;
+},
+
+activity(){
+  const rides = [
+    {from:'Koramangala 5th Block', to:'Indiranagar Metro Station', date:'Today, 6:38 PM', fare:'₹184', status: state.tripActive ? 'Live now' : (state.tripEnded ? 'Completed' : 'Completed')},
+    {from:'HSR Layout', to:'Prestige Tech Park', date:'Yesterday, 9:02 AM', fare:'₹142', status:'Completed'},
+    {from:'Whitefield', to:'Kempegowda Airport', date:'28 Jun, 5:14 AM', fare:'₹612', status:'Completed'},
+  ];
+  return `<div class="screen-content fade-in">
+    ${statusbar()}
+    ${topbar('Activity','home')}
+    <div class="px" style="flex:1;">
+      ${state.tripActive ? `
+        <div class="card tap" style="background:var(--black); color:#fff; border:none; display:flex; align-items:center; gap:12px;" onclick="goTo('trip')">
+          <div style="color:var(--white);">${icon('car',20)}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:13px;">Trip in progress</div>
+            <div style="font-size:10.5px; color:var(--grey-400); font-weight:500;">Tap to view live trip</div>
+          </div>
+          <div>›</div>
+        </div>` : ''}
+      ${rides.map(r=>`
+        <div class="card" style="margin-top:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div style="font-size:12.5px; font-weight:700;">${r.from} → ${r.to}</div>
+              <div style="font-size:10.5px; color:var(--grey-500); margin-top:4px; font-weight:600;">${r.date}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:13px; font-weight:800;">${r.fare}</div>
+              <div class="badge ${r.status==='Live now'?'badge-green':'badge-grey'}" style="margin-top:4px;">${r.status}</div>
+            </div>
+          </div>
+        </div>`).join('')}
+      <div style="flex:1; min-height:10px;"></div>
+    </div>
+    ${bottomnav('activity')}
+  </div>`;
+},
+
+};
+
+function render(){
+  renderStepper();
+  const el = document.getElementById('screen');
+  const prevContent = el.querySelector('.screen-content');
+  const scrollTop = prevContent ? prevContent.scrollTop : 0;
+  const fn = SCREENS[state.screen] || SCREENS.splash;
+  el.innerHTML = fn() + (state.toast ? `<div class="toast"><span class="toast-ic">${icon('check-circle',16)}</span>${state.toast}</div>` : '');
+  const newContent = el.querySelector('.screen-content');
+  if(newContent) newContent.scrollTop = scrollTop;
+}
+
+render();
+</script>
+</body>
+</html>

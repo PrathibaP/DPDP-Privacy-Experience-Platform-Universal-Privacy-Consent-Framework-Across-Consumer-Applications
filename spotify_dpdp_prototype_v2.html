@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spotify · Privacy & Consent Prototype (DPDP)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#000000;
+    --bg:#121212;
+    --card:#181818;
+    --card-hi:#232323;
+    --elevated:#282828;
+    --border:#2a2a2a;
+    --green:#1DB954;
+    --green-bright:#1ED760;
+    --green-dim:#12331F;
+    --text:#FFFFFF;
+    --text-sub:#B3B3B3;
+    --text-faint:#6a6a6a;
+    --danger:#F15E6C;
+    --warn:#F0A868;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --shadow: 0 12px 30px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(circle at 50% -10%, #1a2e22 0%, #0a0a0a 45%, #000 100%);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Inter',-apple-system,sans-serif;
+    color:var(--text);
+    padding:28px 12px;
+  }
+  .device{
+    width:390px;
+    max-width:100%;
+    height:844px;
+    max-height:92vh;
+    background:var(--bg);
+    border-radius:44px;
+    border:10px solid #050505;
+    box-shadow: var(--shadow), 0 0 0 1px #1c1c1c;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .statusbar{
+    height:44px; flex:0 0 44px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 26px; font-size:14px; font-weight:600; color:var(--text);
+    position:relative; z-index:20;
+  }
+  .statusbar .icons{display:flex; gap:5px; align-items:center;}
+  .notch{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:120px; height:26px; background:#050505; border-radius:0 0 18px 18px; z-index:30;
+  }
+  .screens{ flex:1; position:relative; overflow:hidden; }
+  .screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    opacity:0; visibility:hidden;
+    transform:translateX(24px);
+    transition:opacity .35s ease, transform .35s ease;
+    overflow-y:auto;
+    padding-bottom:12px;
+  }
+  .screen.active{ opacity:1; visibility:visible; transform:translateX(0); z-index:5; }
+  .screen::-webkit-scrollbar{width:0px;}
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:6px 20px 8px; flex:0 0 auto; }
+  .iconbtn{
+    width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.06);
+    display:flex; align-items:center; justify-content:center; border:none; color:var(--text); cursor:pointer;
+    transition: background .2s ease, transform .15s ease;
+  }
+  .iconbtn:hover{background:rgba(255,255,255,.12);}
+  .iconbtn:active{transform:scale(.92);}
+  .dots{display:flex; gap:6px; align-items:center;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--border); transition:.3s;}
+  .dot.on{background:var(--green); width:20px; border-radius:5px;}
+
+  .content{padding:6px 24px 24px; flex:1;}
+  h1.title{font-size:26px; font-weight:800; letter-spacing:-.02em; margin:8px 0 6px; line-height:1.15;}
+  h2.title{font-size:21px; font-weight:800; letter-spacing:-.01em; margin:4px 0 6px;}
+  p.sub{color:var(--text-sub); font-size:14.5px; line-height:1.55; margin:0 0 22px; font-weight:400;}
+  .eyebrow{ color:var(--green); font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; margin-bottom:8px; }
+
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; padding:15px 20px; border-radius:500px; border:none;
+    font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+    transition: transform .15s ease, background .2s ease, box-shadow .2s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--green); color:#000;}
+  .btn-primary:hover{background:var(--green-bright); box-shadow:0 6px 18px rgba(29,185,84,.35);}
+  .btn-secondary{background:transparent; color:var(--text); border:1px solid #4d4d4d;}
+  .btn-secondary:hover{border-color:var(--text);}
+  .btn-ghost{background:transparent; color:var(--text-sub); font-weight:600; padding:10px;}
+  .btn-ghost:hover{color:var(--text);}
+  .btn-danger{background:transparent; color:var(--danger); border:1px solid rgba(241,94,108,.5);}
+  .btn-danger:hover{background:rgba(241,94,108,.08);}
+  .btn-row{display:flex; gap:10px; margin-top:10px;}
+  .btn-row .btn{width:auto; flex:1;}
+  .footer-actions{padding:14px 24px 22px; flex:0 0 auto; display:flex; flex-direction:column; gap:10px;}
+
+  .switch{position:relative; width:44px; height:26px; flex:0 0 44px; cursor:pointer;}
+  .switch input{display:none;}
+  .switch .track{ position:absolute; inset:0; background:#4d4d4d; border-radius:20px; transition:.25s; }
+  .switch .knob{
+    position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%;
+    background:#fff; transition:.25s cubic-bezier(.4,0,.2,1); box-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  .switch input:checked + .track{background:var(--green);}
+  .switch input:checked + .track + .knob{transform:translateX(18px);}
+
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; margin-bottom:12px; }
+  .row{display:flex; align-items:center; gap:13px;}
+  .row-icon{
+    width:40px; height:40px; border-radius:var(--radius-sm); flex:0 0 40px;
+    display:flex; align-items:center; justify-content:center; background:var(--elevated);
+  }
+  .row-text{flex:1; min-width:0;}
+  .row-title{font-size:14.5px; font-weight:600; color:var(--text); margin:0;}
+  .row-desc{font-size:12.5px; color:var(--text-faint); margin:2px 0 0; line-height:1.4;}
+
+  .list-item{
+    display:flex; align-items:center; gap:14px; padding:15px 4px;
+    border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s;
+  }
+  .list-item:last-child{border-bottom:none;}
+  .list-item:hover{background:rgba(255,255,255,.03);}
+  .chev{color:var(--text-faint); margin-left:auto;}
+
+  .pill{ display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:500px; font-size:11.5px; font-weight:700; letter-spacing:.02em; }
+  .pill-green{background:rgba(29,185,84,.14); color:var(--green-bright);}
+  .pill-grey{background:rgba(255,255,255,.08); color:var(--text-sub);}
+  .pill-warn{background:rgba(240,168,104,.14); color:var(--warn);}
+
+  .toast{
+    position:absolute; left:20px; right:20px; bottom:24px;
+    background:#282828; border:1px solid #3a3a3a; border-radius:12px;
+    padding:13px 16px; display:flex; align-items:center; gap:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+    transform:translateY(120%); opacity:0; transition:.35s cubic-bezier(.34,1.56,.64,1);
+    z-index:100; font-size:13.5px; font-weight:600;
+  }
+  .toast.show{transform:translateY(0); opacity:1;}
+
+  .modal-wrap{
+    position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(2px);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; visibility:hidden; transition:.25s ease; z-index:200;
+  }
+  .modal-wrap.show{opacity:1; visibility:visible;}
+  .modal{
+    background:var(--elevated); width:100%; border-radius:24px 24px 0 0; padding:26px 24px 28px;
+    transform:translateY(100%); transition:.35s cubic-bezier(.32,.72,0,1);
+    max-height:82%; overflow-y:auto;
+  }
+  .modal-wrap.show .modal{transform:translateY(0);}
+  .modal h3{margin:6px 0 8px; font-size:18px;}
+  .modal p{color:var(--text-sub); font-size:13.5px; line-height:1.55; margin:0 0 20px;}
+  .modal-handle{ width:36px; height:4px; border-radius:4px; background:#484848; margin:0 auto 16px; }
+
+  .progress{display:flex; gap:6px; padding:0 24px; margin-bottom:6px;}
+  .progress span{flex:1; height:3px; background:var(--border); border-radius:3px; overflow:hidden;}
+  .progress span i{display:block; height:100%; width:0; background:var(--green); transition:width .4s ease;}
+  .progress span.filled i{width:100%;}
+
+  .hero-icon{
+    width:88px; height:88px; border-radius:50%; background:var(--green);
+    display:flex; align-items:center; justify-content:center; margin:18px 0 22px;
+    box-shadow:0 10px 30px rgba(29,185,84,.35);
+  }
+
+  .accordion-item{border-bottom:1px solid var(--border);}
+  .accordion-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 2px; cursor:pointer; }
+  .accordion-head span.q{font-size:13.5px; font-weight:600;}
+  .accordion-body{max-height:0; overflow:hidden; transition:max-height .3s ease;}
+  .accordion-body p{padding:0 2px 14px; font-size:12.5px; color:var(--text-sub); line-height:1.6; margin:0;}
+  .accordion-item.open .accordion-body{max-height:200px;}
+  .accordion-item.open .chevron{transform:rotate(180deg);}
+  .chevron{transition:.25s; color:var(--text-faint);}
+
+  .otp-row{display:flex; gap:10px; margin:14px 0 22px;}
+  .otp-box{
+    width:44px; height:54px; border-radius:10px; background:var(--card);
+    border:1.5px solid var(--border); text-align:center; font-size:20px; font-weight:700;
+    color:var(--text); font-family:inherit; outline:none; transition:.2s;
+  }
+  .otp-box:focus{border-color:var(--green);}
+
+  input[type=range]{ -webkit-appearance:none; width:100%; height:4px; border-radius:4px; background:var(--elevated); outline:none; }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--green);
+    cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.4); border:3px solid #fff;
+  }
+
+  .bottomnav{
+    display:flex; border-top:1px solid var(--border); background:rgba(18,18,18,.92);
+    backdrop-filter:blur(10px); padding:10px 10px 16px; flex:0 0 auto;
+  }
+  .navbtn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none;
+    color:var(--text-faint); font-family:inherit; font-size:10.5px; font-weight:600; cursor:pointer; padding:4px;
+    transition:.2s;
+  }
+  .navbtn.active{color:var(--text);}
+  .navbtn.active svg{stroke:var(--green);}
+
+  .segment{display:flex; background:var(--card); border-radius:12px; padding:4px; gap:4px; margin-bottom:18px;}
+  .segment button{
+    flex:1; padding:10px; border-radius:9px; border:none; background:transparent; color:var(--text-sub);
+    font-family:inherit; font-weight:700; font-size:12.5px; cursor:pointer; transition:.2s;
+  }
+  .segment button.active{background:var(--elevated); color:var(--text);}
+
+  .divider{height:1px; background:var(--border); margin:18px 0;}
+
+  .badge-status{
+    display:flex; align-items:center; gap:14px; background:linear-gradient(135deg,#1c3524,#152a1c);
+    border:1px solid rgba(29,185,84,.3); border-radius:var(--radius-lg); padding:18px; margin-bottom:18px;
+  }
+
+  .checkmark-wrap{
+    width:96px; height:96px; border-radius:50%; background:rgba(29,185,84,.12);
+    display:flex; align-items:center; justify-content:center; margin:32px auto 20px;
+  }
+  .checkmark-circle{
+    width:70px; height:70px; border-radius:50%; background:var(--green);
+    display:flex; align-items:center; justify-content:center;
+    animation:pop .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop{0%{transform:scale(0);}80%{transform:scale(1.12);}100%{transform:scale(1);}}
+  .center-text{text-align:center;}
+  ::selection{background:var(--green); color:#000;}
+  @media (max-height:780px){ .device{height:96vh;} }
+
+  /* ---- nutrition label ---- */
+  .nutri-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; padding-top:12px; margin-top:12px; border-top:1px solid var(--border); }
+  .nutri-k{ font-size:9.5px; font-weight:700; color:var(--text-faint); letter-spacing:.6px; text-transform:uppercase; margin-bottom:3px; }
+  .nutri-v{ font-size:12.5px; color:var(--text); line-height:1.35; font-weight:600; }
+
+  /* ---- impact sheet ---- */
+  .impact-cols{ display:flex; gap:16px; margin:14px 0 4px; }
+  .impact-col{ flex:1; }
+  .impact-heading{ font-size:11.5px; font-weight:700; letter-spacing:.3px; margin-bottom:10px; }
+  .impact-heading.gain{ color:var(--green-bright); }
+  .impact-heading.keep{ color:var(--text-sub); }
+  .impact-heading.lose{ color:var(--text-faint); }
+  .impact-item{ font-size:13px; padding:6px 0; display:flex; align-items:center; gap:8px; }
+  .impact-item.on{ color:var(--text); }
+  .impact-item.off{ color:var(--text-faint); }
+  .impact-item svg{ flex:none; }
+
+  /* ---- data flow / where your data goes ---- */
+  .flow-line{ width:2px; height:20px; background:var(--border); margin:0 auto; }
+  .flow-card.locked{ opacity:.45; }
+  .flow-tags{ display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+  .flow-tag{ font-size:10.5px; background:var(--elevated); color:var(--text-sub); padding:4px 10px; border-radius:14px; }
+  .flow-meta{ display:flex; justify-content:space-between; font-size:11px; color:var(--text-faint); padding-top:10px; border-top:1px solid var(--border); margin-top:2px;}
+  .flow-meta b{ color:var(--text-sub); font-weight:600; }
+  .lock-note{ font-size:11.5px; color:var(--warn); display:flex; align-items:center; gap:6px; margin-top:10px; }
+
+  /* ---- consent timeline ---- */
+  .search-input{
+    width:100%; background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:11px 14px; color:var(--text); font-size:13px; font-family:inherit; margin-bottom:12px;
+  }
+  .search-input::placeholder{ color:var(--text-faint); }
+  .search-input:focus{ outline:none; border-color:var(--green); }
+  .filter-row{ display:flex; gap:8px; overflow-x:auto; padding:2px 0 14px; }
+  .filter-chip{
+    flex:none; font-size:11.5px; font-weight:700; padding:7px 13px; border-radius:20px;
+    background:var(--card); color:var(--text-sub); cursor:pointer; border:1px solid var(--border);
+  }
+  .filter-chip.active{ background:var(--green-dim); color:var(--green-bright); border-color:#1f4a2c; }
+  .timeline-day{ font-size:11px; font-weight:700; color:var(--text-faint); letter-spacing:.6px; margin:16px 0 8px; text-transform:uppercase;}
+  .timeline-day:first-child{ margin-top:0; }
+  .tl-item{ display:flex; gap:12px; }
+  .tl-rail{ display:flex; flex-direction:column; align-items:center; flex:none; }
+  .tl-dot{ width:26px; height:26px; border-radius:50%; background:var(--elevated); display:flex; align-items:center; justify-content:center; flex:none; }
+  .tl-line{ width:2px; flex:1; background:var(--border); margin-top:2px; min-height:14px;}
+  .tl-body{ flex:1; padding-bottom:16px; }
+  .tl-body .t{ font-size:13.5px; font-weight:600; color:var(--text); }
+  .tl-body .d{ font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <div class="icons">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><path d="M1 9L1 11M4.5 6L4.5 11M8 4L8 11M11.5 2L11.5 11M15 0.5L15 11" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="2.5" stroke="white" stroke-width="1.2"/><rect x="2.5" y="2.5" width="16" height="7" rx="1.3" fill="white"/><rect x="22" y="4" width="1.5" height="4" rx="0.7" fill="white"/></svg>
+    </div>
+  </div>
+
+  <div class="screens" id="screens">
+
+    <!-- SCREEN 1 — WELCOME -->
+    <div class="screen active" id="s1">
+      <div class="content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; padding-top:40px;">
+        <div class="hero-icon">
+          <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+            <path d="M11 30C18 25 28 25 35 30" stroke="#000" stroke-width="3.4" stroke-linecap="round"/>
+            <path d="M13 22C20 18 26 18 33 22" stroke="#000" stroke-width="3.4" stroke-linecap="round"/>
+            <path d="M15 14C20 12 26 12 31 14" stroke="#000" stroke-width="3.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="eyebrow center-text" style="width:100%;">Privacy, built in</div>
+        <h1 class="title center-text">Your music.<br>Your data. Your rules.</h1>
+        <p class="sub center-text">Before you dive back into your playlists, let's walk through how we handle your personal data — in line with India's DPDP Act, 2023. It takes less than a minute.</p>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" onclick="go('s2')">Continue</button>
+        <div class="center-text" style="color:var(--text-faint); font-size:11.5px; margin-top:2px;">By continuing you agree this walkthrough explains our data practices</div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2 — WHY WE COLLECT DATA -->
+    <div class="screen" id="s2">
+      <div class="topbar">
+        <button class="iconbtn" onclick="go('s1')">‹</button>
+        <div class="dots"><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="content">
+        <div class="eyebrow">1 of 4 · Purpose, explained</div>
+        <h1 class="title">Why Spotify asks for this</h1>
+        <p class="sub">We only collect what we need, only for the reasons below. Nothing is used outside these purposes without asking you again.</p>
+        <div class="card">
+          <div class="row">
+            <div class="row-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 8.5L21 9.3L16.3 13.8L17.6 20.3L12 17L6.4 20.3L7.7 13.8L3 9.3L9.5 8.5L12 2Z" stroke="#1ED760" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+            <div class="row-text"><p class="row-title">Personalisation</p><p class="row-desc">Shape Discover Weekly, Radio and Home around what you actually listen to.</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <div class="row-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3L20 7V12C20 16.5 16.5 20.3 12 21C7.5 20.3 4 16.5 4 12V7L12 3Z" stroke="#1ED760" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+            <div class="row-text"><p class="row-title">Reliability & security</p><p class="row-desc">Keep streaming stable, detect fraud, and protect your account from misuse.</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <div class="row-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 19V13M10 19V8M16 19V15M22 19V5" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+            <div class="row-text"><p class="row-title">Product insight</p><p class="row-desc">Understand aggregate trends so we can fix what's broken and build what's next.</p></div>
+          </div>
+        </div>
+        <p class="row-desc" style="margin-top:4px;">Next: a simple label for every data type — like a nutrition label, but for your data.</p>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" onclick="go('s10')">Continue</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 10 — PRIVACY NUTRITION LABEL (NEW · Feature 1) -->
+    <div class="screen" id="s10">
+      <div class="topbar">
+        <button class="iconbtn" onclick="go('s2')">‹</button>
+        <div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div></div>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="content">
+        <div class="eyebrow">2 of 4 · Nothing hidden in legal text</div>
+        <h1 class="title">Your data, at a glance</h1>
+        <p class="sub">A nutrition label for every data type Spotify touches — what it's for, whether it's shared, and how long we keep it.</p>
+        <div id="nutritionList"></div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" onclick="go('s3')">Continue</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3 — GRANULAR CONSENT -->
+    <div class="screen" id="s3">
+      <div class="topbar">
+        <button class="iconbtn" onclick="go('s10')">‹</button>
+        <div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div>
+        <button class="btn-ghost" style="font-size:12px;" onclick="selectAllToggles()">Select all</button>
+      </div>
+      <div class="content">
+        <div class="eyebrow">3 of 4 · Your choice, item by item</div>
+        <h1 class="title">Choose what you share</h1>
+        <p class="sub">Everything starts switched off. Turn on only what you're comfortable with — you'll see exactly what changes each time, and you can adjust anytime from your Privacy Dashboard.</p>
+        <div id="toggleList"></div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" onclick="go('s4')">Review & continue</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 4 — DPDP CONSENT SUMMARY -->
+    <div class="screen" id="s4">
+      <div class="topbar">
+        <button class="iconbtn" onclick="go('s3')">‹</button>
+        <div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div></div>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="content">
+        <div class="eyebrow">4 of 4 · Consent summary</div>
+        <h1 class="title">Here's what you've chosen</h1>
+        <p class="sub">A plain-language summary, as required under the DPDP Act. Tap any line to read more.</p>
+        <div class="card" style="padding:6px 16px;" id="summaryList"></div>
+        <div class="card">
+          <div class="accordion-item">
+            <div class="accordion-head" onclick="toggleAcc(this)">
+              <span class="q">What happens if I decline something?</span>
+              <svg class="chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6L8 10L12 6" stroke="#B3B3B3" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="accordion-body"><p>Spotify still works. Declined items simply won't personalise or activate that specific feature — core playback is never affected.</p></div>
+          </div>
+          <div class="accordion-item">
+            <div class="accordion-head" onclick="toggleAcc(this)">
+              <span class="q">How long is my data kept?</span>
+              <svg class="chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6L8 10L12 6" stroke="#B3B3B3" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="accordion-body"><p>Only as long as the purpose requires — see the nutrition label for exact retention windows per data type.</p></div>
+          </div>
+          <div class="accordion-item">
+            <div class="accordion-head" onclick="toggleAcc(this)">
+              <span class="q">What are my rights under DPDP?</span>
+              <svg class="chevron" width="16" height="16" viewBox="0 0 16 16"><path d="M4 6L8 10L12 6" stroke="#B3B3B3" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="accordion-body"><p>You can access, correct, download, or erase your personal data, and withdraw consent at any time — as easily as you gave it.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" onclick="finishOnboarding()">Accept & continue</button>
+        <button class="btn btn-secondary" onclick="go('s3')">Customise choices</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 9 — SUCCESS -->
+    <div class="screen" id="s9">
+      <div class="content center-text" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+        <div class="checkmark-wrap">
+          <div class="checkmark-circle"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M5 13L9.5 17.5L19 7" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <h1 class="title">Privacy protected</h1>
+        <p class="sub">Your choices are saved and active immediately. You can revisit them anytime from your Privacy Dashboard.</p>
+        <div class="card" style="text-align:left;">
+          <div class="row"><div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12L11 14L15 10" stroke="#1ED760" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="#1ED760" stroke-width="1.6"/></svg></div>
+            <div class="row-text"><p class="row-title">Consent recorded</p><p class="row-desc" id="successTimestamp">Just now · Version 1.0</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-actions"><button class="btn btn-primary" onclick="go('s5')">Explore Spotify</button></div>
+    </div>
+
+    <!-- SCREEN 5 — PRIVACY DASHBOARD -->
+    <div class="screen" id="s5">
+      <div class="topbar">
+        <div style="width:36px;"></div>
+        <span style="font-weight:700; font-size:15px;">Privacy Dashboard</span>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="content">
+        <div class="badge-status">
+          <div style="width:44px;height:44px;border-radius:50%;background:rgba(29,185,84,.2);display:flex;align-items:center;justify-content:center;flex:0 0 44px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3L19 6V11C19 15.5 16 19.3 12 20C8 19.3 5 15.5 5 11V6L12 3Z" stroke="#1ED760" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 12L11.3 13.8L14.8 10" stroke="#1ED760" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div style="font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#8fd6a8;">Consent status</div>
+            <div style="font-weight:800; font-size:17px; color:var(--green-bright); margin-top:3px;">✓ Active</div>
+            <div style="font-size:12px; color:var(--text-sub); margin-top:3px;">Renews on <b style="color:var(--text);">12 July 2027</b></div>
+            <div style="font-size:11px; color:var(--text-faint); margin-top:2px;" id="dashUpdated">Last updated just now</div>
+          </div>
+        </div>
+
+        <div class="eyebrow">Permissions</div>
+        <div id="permGrid"></div>
+
+        <div class="eyebrow" style="margin-top:6px;">Quick actions</div>
+        <div class="list-item" onclick="go('s6')">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3V15M12 15L7 10M12 15L17 10M5 19H19" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="row-text"><p class="row-title">Manage my data</p><p class="row-desc">Download, delete, export, consent timeline</p></div>
+          <span class="chev">›</span>
+        </div>
+        <div class="list-item" onclick="go('s11')">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="2.4" stroke="#fff" stroke-width="1.6"/><circle cx="18" cy="6" r="2.4" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="18" r="2.4" stroke="#fff" stroke-width="1.6"/><path d="M8 7.3L11 16.2M16 7.3L13 16.2M8.4 6H15.6" stroke="#fff" stroke-width="1.4"/></svg></div>
+          <div class="row-text"><p class="row-title">Where your data goes</p><p class="row-desc">Every partner, purpose & retention</p></div>
+          <span class="chev">›</span>
+        </div>
+        <div class="list-item" onclick="go('s7')">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 12C14.2 12 16 10.2 16 8C16 5.8 14.2 4 12 4C9.8 4 8 5.8 8 8C8 10.2 9.8 12 12 12Z" stroke="#fff" stroke-width="1.6"/><path d="M4 20C4 16.7 7.6 14 12 14C16.4 14 20 16.7 20 20" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div class="row-text"><p class="row-title">Family & kids controls</p><p class="row-desc">Verify a parent, manage a child account</p></div>
+          <span class="chev">›</span>
+        </div>
+      </div>
+      <div class="bottomnav" id="bottomnav5"></div>
+    </div>
+
+    <!-- SCREEN 6 — MANAGE DATA + CONSENT TIMELINE (Feature 5) -->
+    <div class="screen" id="s6">
+      <div class="topbar">
+        <button class="iconbtn" onclick="go('s5')">‹</button>
+        <span style="font-weight:700; font-size:15px;">Manage my data</span>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="content">
+        <p class="sub" style="margin-bottom:8px;">Rights guaranteed under the DPDP Act — access, correction, portability and erasure, all in one place.</p>
+        <div class="card" style="padding:6px 16px;">
+          <div class="list-item" onclick="requestDownload()">
+            <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4V14M12 14L8 10M12 14L16 10M5 18H19" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row-text"><p class="row-title">Download my data</p><p class="row-desc">A full copy, ready in ~48 hours</p></div>
+            <span class="chev">›</span>
+          </div>
+          <div class="list-item" onclick="exportPlaylists()">
+            <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="#1ED760" stroke-width="1.6"/><path d="M8 9H16M8 13H13" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+            <div class="row-text"><p class="row-title">Export playlists</p><p class="row-desc">CSV file of every playlist you own</p></div>
+            <span class="chev">›</span>
+          </div>
+        </div>
+
+        <div class="eyebrow" style="margin-top:22px;">Danger zone</div>
+        <div class="card" style="padding:6px 16px; border-color:rgba(241,94,108,.25);">
+          <div class="list-item" onclick="openModal('modalHistory')">
+            <div class="row-icon" style="background:rgba(241,94,108,.12);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 7H18M9 7V5C9 4.4 9.4 4 10 4H14C14.6 4 15 4.4 15 5V7M8 7L8.6 18.4C8.6 19.3 9.4 20 10.3 20H13.7C14.6 20 15.4 19.3 15.4 18.4L16 7" stroke="#F15E6C" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+            <div class="row-text"><p class="row-title" style="color:#F15E6C;">Delete listening history</p><p class="row-desc">Clears personalisation data only</p></div>
+            <span class="chev">›</span>
+          </div>
+          <div class="list-item" onclick="openModal('modalDelete')">
+            <div class="row-icon" style="background:rgba(241,94,108,.12);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 9V13M12 17H12.01M4 19L12 4L20 19H4Z" stroke="#F15E6C" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+            <div class="row-text"><p class="row-title" style="color:#F15E6C;">Delete account</p><p class="row-desc">Permanently erases your Spotify data</p></div>
+            <span class="chev">›</span>
+          </div>
+        </div>
+
+        <div class="eyebrow" style="margin-top:22px;">Consent timeline</div>
+        <input class="search-input" id="tlSearch" placeholder="Search timeline…" oninput="renderTimeline()">
+        <div class="filter-row">
+          <div class="filter-chip active" data-cat="all" onclick="setFilter('all',this)">All</div>
+          <div class="filter-chip" data-cat="consent" onclick="setFilter('consent',this)">Consent</div>
+          <div class="filter-chip" data-cat="data" onclick="setFilter('data',this)">Data rights</div>
+          <div class="filter-chip" data-cat="family" onclick="setFilter('family',this)">Family</div>
+          <div class="filter-chip" data-cat="account" onclick="setFilter('account',this)">Account</div>
+        </div>
+        <div id="timelineList"></div>
+        <button class="btn btn-secondary" style="margin-top:6px;" onclick="showToast('Timeline exported as CSV')">Export timeline</button>
+      </div>
+      <div class="bottomnav" id="bottomnav6"></div>
+    </div>
+
+    <!-- SCREEN 11 — WHERE YOUR DATA GOES (Feature 4) -->
+    <div class="screen" id="s11">
+      <div class="topbar">
+        <button class="iconbtn" onclick="go('s5')">‹</button>
+        <span style="font-weight:700; font-size:15px;">Where your data goes</span>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="content">
+        <p class="sub" style="margin-bottom:10px;">Spotify only shares what's needed to run the service — never sold, never bundled. Here's every partner that touches your data.</p>
+        <div class="card" style="background:linear-gradient(135deg,#12331f,#1a1a1a); border:1px solid #1f4a2c;">
+          <div class="row">
+            <div class="row-icon" style="background:var(--green-dim);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 18V5L20 3V16" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="#1ED760" stroke-width="1.6"/><circle cx="17" cy="16" r="3" stroke="#1ED760" stroke-width="1.6"/></svg></div>
+            <div class="row-text"><p class="row-title">Spotify</p><p class="row-desc">Data originates here, under your consent settings</p></div>
+          </div>
+        </div>
+        <div class="flow-line"></div>
+        <div id="sharingList"></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 7 — PARENTAL CONSENT -->
+    <div class="screen" id="s7">
+      <div class="topbar">
+        <button class="iconbtn" onclick="go('s5')">‹</button>
+        <span style="font-weight:700; font-size:15px;">Parental consent</span>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="content">
+        <div class="eyebrow">Required under DPDP</div>
+        <h1 class="title" style="font-size:22px;">Verify you're the parent</h1>
+        <p class="sub">Spotify Kids needs verifiable consent from a parent or guardian before we create a child's profile.</p>
+        <div class="card">
+          <p class="row-title" style="margin-bottom:10px;">Step 1 · Confirm it's you</p>
+          <p class="row-desc" style="margin-bottom:12px;">We've sent a 6-digit code to your registered number ending in •• 42.</p>
+          <div class="otp-row">
+            <input class="otp-box" maxlength="1" inputmode="numeric" oninput="otpMove(this)">
+            <input class="otp-box" maxlength="1" inputmode="numeric" oninput="otpMove(this)">
+            <input class="otp-box" maxlength="1" inputmode="numeric" oninput="otpMove(this)">
+            <input class="otp-box" maxlength="1" inputmode="numeric" oninput="otpMove(this)">
+            <input class="otp-box" maxlength="1" inputmode="numeric" oninput="otpMove(this)">
+            <input class="otp-box" maxlength="1" inputmode="numeric" oninput="otpMove(this)">
+          </div>
+          <button class="btn-ghost" style="padding:0; font-size:12.5px;" onclick="showToast('New code sent')">Resend code</button>
+        </div>
+        <div class="card" id="idCard" onclick="verifyId()">
+          <div class="row">
+            <div class="row-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="#1ED760" stroke-width="1.6"/><circle cx="8.5" cy="12" r="1.8" stroke="#1ED760" stroke-width="1.4"/><path d="M13 10H18M13 14H16" stroke="#1ED760" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+            <div class="row-text"><p class="row-title">Step 2 · Verify government ID</p><p class="row-desc" id="idStatus">Tap to upload — used only for age verification, then discarded</p></div>
+            <span class="chev" id="idChev">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-actions"><button class="btn btn-primary" onclick="approveChild()">Approve & link child account</button></div>
+    </div>
+
+    <!-- SCREEN 8 — SPOTIFY KIDS DASHBOARD -->
+    <div class="screen" id="s8">
+      <div class="topbar">
+        <button class="iconbtn" onclick="go('s5')">‹</button>
+        <span style="font-weight:700; font-size:15px;">Spotify Kids · Parent controls</span>
+        <div style="width:36px;"></div>
+      </div>
+      <div class="content">
+        <div class="card" style="display:flex; gap:12px; align-items:center;">
+          <div style="width:46px;height:46px;border-radius:50%;background:#ffb84d;display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;flex:0 0 46px;">A</div>
+          <div><div style="font-weight:700; font-size:14.5px;">Aanya's profile</div><div style="font-size:12px; color:var(--text-sub);">Linked to your account · Verified parent</div></div>
+        </div>
+        <div class="eyebrow" style="margin-top:18px;">Content restriction level</div>
+        <div class="segment">
+          <button class="active" onclick="segClick(this)">Little Kids (3+)</button>
+          <button onclick="segClick(this)">Big Kids (6+)</button>
+        </div>
+        <div class="card">
+          <p class="row-title" style="margin-bottom:12px;">Daily listening limit</p>
+          <input type="range" min="15" max="180" step="15" value="60" oninput="updateSlider(this)">
+          <div style="display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-faint); margin-top:6px;">
+            <span>15 min</span><span id="sliderVal" style="color:var(--green-bright); font-weight:700; font-size:13px;">60 min / day</span><span>3 hrs</span>
+          </div>
+        </div>
+        <div class="card" style="padding:6px 16px;">
+          <div class="row" style="padding:12px 0; border-bottom:1px solid var(--border);">
+            <div class="row-text"><p class="row-title">Explicit content</p><p class="row-desc">Always filtered on Kids profiles</p></div>
+            <span class="pill pill-grey">Locked off</span>
+          </div>
+          <div class="row" style="padding:12px 0; border-bottom:1px solid var(--border);">
+            <div class="row-text"><p class="row-title">Data collection for personalisation</p><p class="row-desc">Off by default for all child accounts</p></div>
+            <span class="pill pill-grey">Locked off</span>
+          </div>
+          <div class="row" style="padding:12px 0;">
+            <div class="row-text"><p class="row-title">Weekly listening summary</p><p class="row-desc">Emailed to the verified parent</p></div>
+            <div class="switch" onclick="event.stopPropagation()">
+              <input type="checkbox" id="kidsSummary" checked onclick="toastToggle(this,'Weekly summary')">
+              <label class="track" for="kidsSummary"></label><label class="knob" for="kidsSummary"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bottomnav" id="bottomnav8"></div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#1ED760" stroke-width="1.8"/><path d="M8 12.5L10.5 15L16 9" stroke="#1ED760" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span id="toastMsg">Done</span>
+  </div>
+
+  <!-- IMPACT PREVIEW BOTTOM SHEET — Feature 2 & 3 -->
+  <div class="modal-wrap" id="modalImpact">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <h3 id="impactTitle">Personalisation Enabled</h3>
+      <p id="impactSub" style="margin-bottom:10px;">Here's what changes</p>
+      <div class="impact-cols" id="impactCols"></div>
+      <button class="btn btn-primary" style="margin-top:14px;" onclick="closeModal('modalImpact')">Continue</button>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="modalHistory">
+    <div class="modal">
+      <h3>Delete listening history?</h3>
+      <p>This clears the data used to personalise Discover Weekly and Home. Your playlists and saved songs are not affected. This action can't be undone.</p>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal('modalHistory')">Cancel</button>
+        <button class="btn btn-danger" onclick="closeModal('modalHistory'); logTimeline('Listening history deleted','data'); showToast('Listening history deleted')">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="modalDelete">
+    <div class="modal">
+      <h3>Delete your account?</h3>
+      <p>This permanently erases your profile, playlists and personal data within 30 days, as required under the DPDP Act's right to erasure. You'll lose Premium benefits immediately.</p>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal('modalDelete')">Keep account</button>
+        <button class="btn btn-danger" onclick="closeModal('modalDelete'); logTimeline('Account deletion requested','account'); showToast('Deletion request submitted')">Delete permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="modalDownload">
+    <div class="modal">
+      <h3>Preparing your data export</h3>
+      <p>We're packaging your listening history, playlists, account details and consent log into a single file. You'll get a notification and email when it's ready — usually within 48 hours.</p>
+      <div class="btn-row"><button class="btn btn-primary" onclick="closeModal('modalDownload')">Got it</button></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ================= PERMISSIONS (Screen 3 / Dashboard) =================
+  const permissions = [
+    {id:'personalisation', label:'Personalisation', desc:'Tailor recommendations to your taste', on:false,
+      icon:'<path d="M12 2L14.5 8.5L21 9.3L16.3 13.8L17.6 20.3L12 17L6.4 20.3L7.7 13.8L3 9.3L9.5 8.5L12 2Z" stroke="#1ED760" stroke-width="1.6" stroke-linejoin="round"/>'},
+    {id:'analytics', label:'Usage analytics', desc:'Help us fix bugs and improve performance', on:false,
+      icon:'<path d="M4 19V13M10 19V8M16 19V15M22 19V5" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round"/>'},
+    {id:'marketing', label:'Marketing communications', desc:'Offers and updates by email or push', on:false,
+      icon:'<path d="M3 8L12 13L21 8M4 6H20C20.6 6 21 6.4 21 7V17C21 17.6 20.6 18 20 18H4C3.4 18 3 17.6 3 17V7C3 6.4 3.4 6 4 6Z" stroke="#1ED760" stroke-width="1.6" stroke-linejoin="round"/>'},
+    {id:'location', label:'Location', desc:'Local charts, concerts and radio near you', on:false,
+      icon:'<path d="M12 21C12 21 19 15 19 10C19 6 15.9 3 12 3C8.1 3 5 6 5 10C5 15 12 21 12 21Z" stroke="#1ED760" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.3" stroke="#1ED760" stroke-width="1.4"/>'},
+    {id:'microphone', label:'Microphone', desc:'Voice search and sing-along features', on:false,
+      icon:'<rect x="9" y="3" width="6" height="11" rx="3" stroke="#1ED760" stroke-width="1.6"/><path d="M5 11C5 15 8.1 18 12 18C15.9 18 19 15 19 11M12 18V21" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round"/>'},
+    {id:'contacts', label:'Contacts', desc:'Find friends already on Spotify', on:false,
+      icon:'<circle cx="9" cy="8" r="3.2" stroke="#1ED760" stroke-width="1.6"/><path d="M3.5 20C3.5 16.5 6 14 9 14C12 14 14.5 16.5 14.5 20M16 9C17.4 9 18.5 7.9 18.5 6.5C18.5 5.1 17.4 4 16 4M18 14C20 14.4 20.5 16 20.5 18" stroke="#1ED760" stroke-width="1.5" stroke-linecap="round"/>'},
+    {id:'notifications', label:'Notifications', desc:'New releases and listening reminders', on:false,
+      icon:'<path d="M12 21C13.1 21 14 20.1 14 19H10C10 20.1 10.9 21 12 21Z" fill="#1ED760"/><path d="M18 16V11C18 7.7 15.9 5.2 13 4.5V3.5C13 2.7 12.6 2 12 2C11.4 2 11 2.7 11 3.5V4.5C8.1 5.2 6 7.7 6 11V16L4 18V19H20V18L18 16Z" stroke="#1ED760" stroke-width="1.4" stroke-linejoin="round"/>'},
+  ];
+
+  function renderToggles(){
+    const list = document.getElementById('toggleList');
+    list.innerHTML = permissions.map(p => `
+      <div class="card">
+        <div class="row">
+          <div class="row-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none">${p.icon}</svg></div>
+          <div class="row-text"><p class="row-title">${p.label}</p><p class="row-desc">${p.desc}</p></div>
+          <div class="switch">
+            <input type="checkbox" id="tg-${p.id}" ${p.on?'checked':''} onchange="setPerm('${p.id}', this.checked)">
+            <label class="track" for="tg-${p.id}"></label><label class="knob" for="tg-${p.id}"></label>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  function setPerm(id, val){ applyPermChange(id, val); }
+  function selectAllToggles(){
+    permissions.forEach(p=>p.on = true);
+    renderToggles(); renderSummary(); renderPermGrid(); renderSharing();
+    showToast('All permissions enabled');
+  }
+  function renderSummary(){
+    const el = document.getElementById('summaryList'); if(!el) return;
+    el.innerHTML = permissions.map(p => `
+      <div class="row" style="padding:12px 0; border-bottom:1px solid var(--border);">
+        <div class="row-text"><p class="row-title" style="font-size:13.5px;">${p.label}</p></div>
+        <span class="pill ${p.on?'pill-green':'pill-grey'}">${p.on?'Allowed':'Off'}</span>
+      </div>`).join('');
+  }
+  function renderPermGrid(){
+    const el = document.getElementById('permGrid'); if(!el) return;
+    el.innerHTML = permissions.map(p => `
+      <div class="card">
+        <div class="row">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none">${p.icon}</svg></div>
+          <div class="row-text"><p class="row-title" style="font-size:13.5px;">${p.label}</p></div>
+          <div class="switch">
+            <input type="checkbox" id="pg-${p.id}" ${p.on?'checked':''} onchange="setPermFromDash('${p.id}', this.checked)">
+            <label class="track" for="pg-${p.id}"></label><label class="knob" for="pg-${p.id}"></label>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+  function setPermFromDash(id, val){
+    applyPermChange(id, val);
+    document.getElementById('dashUpdated').textContent = 'Last updated just now';
+  }
+  function applyPermChange(id, val){
+    const perm = permissions.find(p=>p.id===id);
+    perm.on = val;
+    renderToggles(); renderSummary(); renderPermGrid(); renderSharing();
+    logTimeline(perm.label + (val ? ' enabled' : ' disabled'), 'consent');
+    showImpactSheet(id, val);
+  }
+
+  // ================= IMPACT PREVIEW SHEET — Feature 2 & 3 =================
+  const impactCopy = {
+    personalisation: {
+      on:{ title:'🎯 Personalisation Enabled', sub:"Here's what changes",
+        gainHeading:'', gain:['Discover Weekly','Daily Mix','AI DJ','Personalized Home Feed'],
+        keepHeading:'Nothing else changes', keep:['Saved Songs','Playlists','Downloads'] },
+      off:{ title:'Personalisation turned off', sub:'You still keep',
+        keepHeading:'You still keep', keep:['Saved Songs','Playlists','Downloads','Offline Listening'],
+        loseHeading:'You lose', lose:['Discover Weekly','Daily Mix','AI DJ','Personalised Recommendations'] }
+    },
+    analytics: {
+      on:{ title:'Analytics enabled', sub:"Here's what changes", gainHeading:'You get', gain:['Faster bug fixes for your device','Smarter crash prevention'], keepHeading:'Unchanged', keep:['Music Playback','Playlists','Library','Downloads'] },
+      off:{ title:'Analytics turned off', sub:"Here's what changes", loseHeading:'You lose', lose:['Faster, device-specific bug fixes'], keepHeading:'You keep', keep:['Music Playback','Playlists','Library','Downloads'] }
+    },
+    marketing: {
+      on:{ title:'Marketing enabled', sub:"Here's what changes", gainHeading:'You get', gain:['Personalised offers','Early access drops'], keepHeading:'Unchanged', keep:['Music Playback','Playlists','Library','Downloads'] },
+      off:{ title:'Marketing turned off', sub:"Here's what changes", loseHeading:'You lose', lose:['Personalised offers','Early access drops'], keepHeading:'You keep', keep:['Music Playback','Playlists','Library','Downloads'] }
+    },
+    location: {
+      on:{ title:'Location enabled', sub:"Here's what changes", gainHeading:'You get', gain:['Nearby Concerts','Regional Charts','Location Recommendations'], keepHeading:'Unchanged', keep:['Music Playback','Playlists','Library','Downloads'] },
+      off:{ title:'Location turned off', sub:"Here's what changes", loseHeading:'You lose', lose:['Nearby Concerts','Regional Charts','Location Recommendations'], keepHeading:'You keep', keep:['Music Playback','Playlists','Library','Downloads'] }
+    },
+    microphone: {
+      on:{ title:'Microphone enabled', sub:"Here's what changes", gainHeading:'You get', gain:['Voice search','Sing-along lyrics sync'], keepHeading:'Unchanged', keep:['Music Playback','Playlists','Library','Downloads'] },
+      off:{ title:'Microphone turned off', sub:"Here's what changes", loseHeading:'You lose', lose:['Voice search','Sing-along lyrics sync'], keepHeading:'You keep', keep:['Music Playback','Playlists','Library','Downloads'] }
+    },
+    contacts: {
+      on:{ title:'Contacts enabled', sub:"Here's what changes", gainHeading:'You get', gain:['Friend Activity','Collaborative playlist suggestions'], keepHeading:'Unchanged', keep:['Music Playback','Playlists','Library','Downloads'] },
+      off:{ title:'Contacts turned off', sub:"Here's what changes", loseHeading:'You lose', lose:['Friend Activity','Collaborative playlist suggestions'], keepHeading:'You keep', keep:['Music Playback','Playlists','Library','Downloads'] }
+    },
+    notifications: {
+      on:{ title:'Notifications enabled', sub:"Here's what changes", gainHeading:'You get', gain:['New release alerts','Listening reminders'], keepHeading:'Unchanged', keep:['Music Playback','Playlists','Library','Downloads'] },
+      off:{ title:'Notifications turned off', sub:"Here's what changes", loseHeading:'You lose', lose:['New release alerts','Listening reminders'], keepHeading:'You keep', keep:['Music Playback','Playlists','Library','Downloads'] }
+    }
+  };
+  function checkSvg(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13L9.5 17.5L19 7" stroke="#1ED760" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  function crossSvg(){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke="#6a6a6a" stroke-width="2.2" stroke-linecap="round"/></svg>'; }
+
+  function showImpactSheet(id, isOn){
+    const data = impactCopy[id]; if(!data) return;
+    const c = data[isOn ? 'on' : 'off'];
+    document.getElementById('impactTitle').textContent = c.title;
+    document.getElementById('impactSub').textContent = c.sub;
+    let cols = '';
+    if(c.gain && c.gain.length){
+      cols += `<div class="impact-col"><div class="impact-heading gain">${c.gainHeading || 'You get'}</div>${c.gain.map(x=>`<div class="impact-item on">${checkSvg()} ${x}</div>`).join('')}</div>`;
+    }
+    if(c.lose && c.lose.length){
+      cols += `<div class="impact-col"><div class="impact-heading lose">${c.loseHeading || 'You lose'}</div>${c.lose.map(x=>`<div class="impact-item off">${crossSvg()} ${x}</div>`).join('')}</div>`;
+    }
+    if(c.keep && c.keep.length){
+      cols += `<div class="impact-col"><div class="impact-heading keep">${c.keepHeading || 'You keep'}</div>${c.keep.map(x=>`<div class="impact-item on">${checkSvg()} ${x}</div>`).join('')}</div>`;
+    }
+    document.getElementById('impactCols').innerHTML = cols;
+    openModal('modalImpact');
+  }
+
+  // ================= PRIVACY NUTRITION LABEL — Feature 1 =================
+  const nutritionData = [
+    { name:'Listening History', purpose:'Personalised recommendations & Wrapped', shared:'No', stored:'24 months (rolling)', consent:'Required', category:'Optional',
+      icon:'<path d="M4 19V13M10 19V8M16 19V15M22 19V5" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round"/>' },
+    { name:'Location', purpose:'Local charts & nearby concerts', shared:'No', stored:'Deleted after each session', consent:'Required', category:'Optional',
+      icon:'<path d="M12 21C12 21 19 15 19 10C19 6 15.9 3 12 3C8.1 3 5 6 5 10C5 15 12 21 12 21Z" stroke="#1ED760" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.3" stroke="#1ED760" stroke-width="1.4"/>' },
+    { name:'Contacts', purpose:'Find friends already on Spotify', shared:'No', stored:'Not stored — matched, then discarded', consent:'Required', category:'Optional',
+      icon:'<circle cx="9" cy="8" r="3.2" stroke="#1ED760" stroke-width="1.6"/><path d="M3.5 20C3.5 16.5 6 14 9 14C12 14 14.5 16.5 14.5 20" stroke="#1ED760" stroke-width="1.5" stroke-linecap="round"/>' },
+    { name:'Microphone', purpose:'Voice search & sing-along lyrics', shared:'No', stored:'Not stored — processed live', consent:'Required', category:'Optional',
+      icon:'<rect x="9" y="3" width="6" height="11" rx="3" stroke="#1ED760" stroke-width="1.6"/><path d="M5 11C5 15 8.1 18 12 18C15.9 18 19 15 19 11M12 18V21" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round"/>' },
+    { name:'Analytics', purpose:'App performance & bug fixes', shared:'Yes — Firebase Analytics', stored:'14 months', consent:'Required', category:'Optional',
+      icon:'<path d="M4 19V13M10 19V8M16 19V15M22 19V5" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round"/>' },
+    { name:'Marketing', purpose:'Offers & early access', shared:'Yes — Advertising Partners (if enabled)', stored:'Until you opt out', consent:'Required', category:'Optional',
+      icon:'<path d="M3 8L12 13L21 8M4 6H20C20.6 6 21 6.4 21 7V17C21 17.6 20.6 18 20 18H4C3.4 18 3 17.6 3 17V7C3 6.4 3.4 6 4 6Z" stroke="#1ED760" stroke-width="1.6" stroke-linejoin="round"/>' },
+    { name:'Playback Data', purpose:'Core streaming & billing', shared:'Yes — Payment Partner (billing only)', stored:'Duration of subscription', consent:'Not required — essential', category:'Essential',
+      icon:'<circle cx="12" cy="12" r="9" stroke="#1ED760" stroke-width="1.6"/><path d="M9.5 9L15 12L9.5 15V9Z" fill="#1ED760"/>' },
+  ];
+  function renderNutrition(){
+    const el = document.getElementById('nutritionList'); if(!el) return;
+    el.innerHTML = nutritionData.map(n => `
+      <div class="card">
+        <div class="row">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none">${n.icon}</svg></div>
+          <div class="row-text"><p class="row-title">${n.name}</p></div>
+          <span class="pill ${n.category==='Essential' ? 'pill-warn' : 'pill-green'}">${n.category}</span>
+        </div>
+        <div class="nutri-grid">
+          <div><div class="nutri-k">Purpose</div><div class="nutri-v">${n.purpose}</div></div>
+          <div><div class="nutri-k">Shared</div><div class="nutri-v">${n.shared}</div></div>
+          <div><div class="nutri-k">Stored</div><div class="nutri-v">${n.stored}</div></div>
+          <div><div class="nutri-k">Consent</div><div class="nutri-v">${n.consent}</div></div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ================= WHERE YOUR DATA GOES — Feature 4 =================
+  function renderSharing(){
+    const el = document.getElementById('sharingList'); if(!el) return;
+    const marketingOn = permissions.find(p=>p.id==='marketing').on;
+    const partners = [
+      { name:'Firebase Analytics', purpose:'Crash reports, performance metrics', shared:'Device type, crash logs, app events', retention:'14 months', revoke:'Yes — turn off Analytics anytime', locked:false,
+        icon:'<path d="M4 19V13M10 19V8M16 19V15M22 19V5" stroke="#1ED760" stroke-width="1.6" stroke-linecap="round"/>' },
+      { name:'Payment Partner', purpose:'Subscription processing', shared:'Billing details, transaction ID', retention:'7 years (regulatory requirement)', revoke:'No — required to process Premium payments', locked:false,
+        icon:'<rect x="2" y="6" width="20" height="14" rx="2" stroke="#1ED760" stroke-width="1.6"/><path d="M2 10H22" stroke="#1ED760" stroke-width="1.6"/>' },
+      { name:'Email Provider', purpose:'Transactional emails (receipts, security alerts)', shared:'Email address, name', retention:'As long as account is active', revoke:'No — required for account security', locked:false,
+        icon:'<rect x="3" y="5" width="18" height="14" rx="2" stroke="#1ED760" stroke-width="1.6"/><path d="M3 7L12 13L21 7" stroke="#1ED760" stroke-width="1.6"/>' },
+      { name:'Advertising Partners', purpose:'Ad personalisation on the Free plan', shared:'Listening interests, device ID', retention:'90 days', revoke:'Yes — turn off Marketing consent anytime', locked:!marketingOn,
+        icon:'<path d="M3 8L12 13L21 8M4 6H20C20.6 6 21 6.4 21 7V17C21 17.6 20.6 18 20 18H4C3.4 18 3 17.6 3 17V7C3 6.4 3.4 6 4 6Z" stroke="#1ED760" stroke-width="1.6" stroke-linejoin="round"/>' },
+    ];
+    el.innerHTML = partners.map((p,i) => `
+      ${i>0 ? '<div class="flow-line"></div>' : ''}
+      <div class="card flow-card ${p.locked?'locked':''}">
+        <div class="row">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none">${p.icon}</svg></div>
+          <div class="row-text"><p class="row-title">${p.name}</p><p class="row-desc">${p.purpose}</p></div>
+        </div>
+        ${p.locked ? `<div class="lock-note">🔒 Enable Marketing consent to see what's shared here</div>` : `
+        <div class="flow-meta"><span>Data shared</span><b>${p.shared}</b></div>
+        <div class="flow-meta"><span>Retention</span><b>${p.retention}</b></div>
+        <div class="flow-meta"><span>Can you revoke?</span><b>${p.revoke}</b></div>`}
+      </div>`).join('');
+  }
+
+  // ================= CONSENT TIMELINE — Feature 5 =================
+  let timelineLog = [
+    { label:'Account created', cat:'account', day:'10 Jun' },
+    { label:'Data export requested', cat:'data', day:'18 Jun' },
+  ];
+  let tlFilter = 'all';
+  function logTimeline(label, cat){
+    timelineLog.unshift({ label, cat, day:'Today' });
+    document.getElementById('dashUpdated') && (document.getElementById('dashUpdated').textContent = 'Last updated just now');
+    renderTimeline();
+  }
+  function setFilter(cat, el){
+    tlFilter = cat;
+    document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    renderTimeline();
+  }
+  function renderTimeline(){
+    const el = document.getElementById('timelineList'); if(!el) return;
+    const q = (document.getElementById('tlSearch')?.value || '').toLowerCase();
+    const filtered = timelineLog.filter(h => (tlFilter==='all' || h.cat===tlFilter) && h.label.toLowerCase().includes(q));
+    if(!filtered.length){ el.innerHTML = `<p class="row-desc" style="padding:16px 4px;">No matching entries.</p>`; return; }
+    let html = ''; let lastDay = null;
+    filtered.forEach((h,i) => {
+      if(h.day !== lastDay){ html += `<div class="timeline-day">${h.day}</div>`; lastDay = h.day; }
+      const isLast = (i === filtered.length-1) || filtered[i+1].day !== h.day;
+      html += `<div class="tl-item">
+        <div class="tl-rail"><div class="tl-dot">${checkSvg()}</div>${isLast?'':'<div class="tl-line"></div>'}</div>
+        <div class="tl-body"><div class="t">${h.label}</div><div class="d">${h.cat.charAt(0).toUpperCase()+h.cat.slice(1)}</div></div>
+      </div>`;
+    });
+    el.innerHTML = html;
+  }
+
+  // ================= NAVIGATION =================
+  function go(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id==='s6') renderTimeline();
+    if(id==='s11') renderSharing();
+    setActiveNav(id);
+  }
+  function finishOnboarding(){
+    document.getElementById('successTimestamp').textContent = 'Just now · Version 1.0';
+    logTimeline('DPDP consent summary accepted', 'consent');
+    go('s9');
+  }
+
+  // ================= ACCORDION =================
+  function toggleAcc(headEl){
+    const item = headEl.parentElement;
+    const wasOpen = item.classList.contains('open');
+    item.parentElement.querySelectorAll('.accordion-item').forEach(i=>i.classList.remove('open'));
+    if(!wasOpen) item.classList.add('open');
+  }
+
+  // ================= TOAST =================
+  let toastTimer;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+  }
+  function toastToggle(el, name){ showToast((el.checked?'Enabled ':'Turned off ') + name); }
+
+  // ================= MODAL =================
+  function openModal(id){ document.getElementById(id).classList.add('show'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+  function requestDownload(){ openModal('modalDownload'); logTimeline('Data export requested','data'); }
+  function exportPlaylists(){ showToast('Playlists exported to your downloads'); logTimeline('Playlists exported','data'); }
+
+  // ================= OTP =================
+  function otpMove(el){
+    el.value = el.value.replace(/[^0-9]/g,'');
+    if(el.value.length===1 && el.nextElementSibling && el.nextElementSibling.classList.contains('otp-box')) el.nextElementSibling.focus();
+    const boxes = document.querySelectorAll('#s7 .otp-box');
+    if([...boxes].every(b=>b.value.length===1)) showToast('Code verified');
+  }
+
+  // ================= ID VERIFY =================
+  function verifyId(){
+    document.getElementById('idStatus').textContent = 'Verified — document discarded after check';
+    document.getElementById('idStatus').style.color = 'var(--green-bright)';
+    document.getElementById('idChev').textContent = '✓';
+    document.getElementById('idChev').style.color = 'var(--green-bright)';
+    showToast('ID verified');
+  }
+  function approveChild(){
+    logTimeline("Verifiable parental consent granted — child profile linked", 'family');
+    go('s8');
+    showToast('Child account linked');
+  }
+
+  // ================= SEGMENT / SLIDER =================
+  function segClick(el){
+    el.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    showToast(el.textContent.trim() + ' restrictions applied');
+    logTimeline('Kids restriction level set to ' + el.textContent.trim(), 'family');
+  }
+  function updateSlider(el){ document.getElementById('sliderVal').textContent = el.value + ' min / day'; }
+
+  // ================= BOTTOM NAV =================
+  const navItems = [
+    {id:'s5', label:'Home', icon:'<path d="M4 11L12 4L20 11V19C20 19.6 19.6 20 19 20H15V14H9V20H5C4.4 20 4 19.6 4 19V11Z"/>'},
+    {id:'s6', label:'Manage', icon:'<path d="M12 4V14M12 14L8 10M12 14L16 10M5 18H19"/>'},
+    {id:'s7', label:'Family', icon:'<circle cx="12" cy="8" r="3.4"/><path d="M4.5 20C4.5 16.4 7.9 14 12 14C16.1 14 19.5 16.4 19.5 20"/>'},
+  ];
+  function buildNav(containerId, activeId){
+    const el = document.getElementById(containerId); if(!el) return;
+    el.innerHTML = navItems.map(n => `
+      <button class="navbtn ${n.id===activeId?'active':''}" onclick="go('${n.id}')">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${n.icon}</svg>
+        ${n.label}
+      </button>`).join('');
+  }
+  function setActiveNav(activeId){
+    ['bottomnav5','bottomnav6','bottomnav8'].forEach(c=>{ if(document.getElementById(c)) buildNav(c, activeId); });
+  }
+
+  // ================= CLOCK =================
+  function tickClock(){
+    const d = new Date();
+    let h = d.getHours()%12; if(h===0) h=12;
+    const m = d.getMinutes().toString().padStart(2,'0');
+    document.getElementById('clock').textContent = `${h}:${m}`;
+  }
+  tickClock(); setInterval(tickClock, 30000);
+
+  // ================= INIT =================
+  renderToggles();
+  renderSummary();
+  renderPermGrid();
+  renderNutrition();
+  renderSharing();
+  renderTimeline();
+  buildNav('bottomnav5','s5');
+  buildNav('bottomnav6','s5');
+  buildNav('bottomnav8','s5');
+</script>
+</body>
+</html>

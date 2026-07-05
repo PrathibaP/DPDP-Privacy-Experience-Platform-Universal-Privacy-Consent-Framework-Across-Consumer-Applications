@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vedantu — Trust by Design Prototype</title>
+<style>
+  :root{
+    --navy:#1B1C39;
+    --navy2:#2A2C57;
+    --orange:#FF6300;
+    --orange-tint:#FFEDDD;
+    --orange-tint2:#FFF6EE;
+    --bg:#FBFBFD;
+    --ink:#23233A;
+    --muted:#6E6E86;
+    --line:#E7E7F1;
+    --success:#1F9D55;
+    --danger:#C0392B;
+    --card:#FFFFFF;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, #2A2C57 0%, transparent 40%),
+      radial-gradient(circle at 85% 90%, #2A2C57 0%, transparent 40%),
+      var(--navy);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:32px 16px 60px;
+  }
+  .header{
+    color:#fff;
+    text-align:center;
+    margin-bottom:22px;
+    max-width:480px;
+  }
+  .header .eyebrow{
+    color:var(--orange);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .header h1{
+    font-family:Cambria,Georgia,"Times New Roman",serif;
+    font-size:26px;
+    margin:0 0 8px;
+  }
+  .header p{
+    font-size:13px;
+    color:#A9AAD1;
+    margin:0;
+    line-height:1.5;
+  }
+  .stage{
+    display:flex;
+    gap:28px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  /* ---- phone frame ---- */
+  .phone{
+    width:375px;
+    height:812px;
+    background:#000;
+    border-radius:46px;
+    padding:12px;
+    box-shadow:0 30px 70px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+    position:relative;
+    flex-shrink:0;
+  }
+  .screen{
+    width:100%;
+    height:100%;
+    background:var(--bg);
+    border-radius:34px;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .notch{
+    position:absolute;
+    top:0; left:50%; transform:translateX(-50%);
+    width:150px; height:26px;
+    background:#000;
+    border-bottom-left-radius:16px;
+    border-bottom-right-radius:16px;
+    z-index:50;
+  }
+  .statusbar{
+    height:44px;
+    flex-shrink:0;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    padding:0 22px 6px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .statusbar.on-dark{color:#fff;}
+  .view{
+    flex:1;
+    overflow-y:auto;
+    display:none;
+    flex-direction:column;
+  }
+  .view.active{display:flex;}
+  .view::-webkit-scrollbar{display:none;}
+
+  /* topbar within a view */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:6px 20px 14px;
+    flex-shrink:0;
+  }
+  .topbar .back{
+    width:34px;height:34px;border-radius:50%;
+    background:var(--card);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;border:1px solid var(--line);
+    font-size:16px; color:var(--ink); flex-shrink:0;
+  }
+  .topbar h2{
+    font-family:Cambria,Georgia,serif;
+    font-size:18px; margin:0; color:var(--ink); font-weight:700;
+  }
+
+  .content{padding:0 20px 24px; flex:1;}
+  .content.pad-top{padding-top:6px;}
+
+  /* dots progress */
+  .dots{display:flex;gap:6px;padding:16px 20px 0;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);}
+  .dot.done{background:var(--orange);}
+  .dot.now{background:var(--orange); width:18px; border-radius:4px;}
+
+  /* buttons */
+  .btn{
+    display:block; width:100%; text-align:center;
+    padding:15px 18px; border-radius:14px; border:none;
+    font-size:15px; font-weight:700; cursor:pointer;
+    font-family:inherit;
+  }
+  .btn-primary{background:var(--orange); color:#fff;}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line);}
+  .btn-text{background:none;border:none;color:var(--orange);font-weight:700;font-size:14px;cursor:pointer;padding:8px;}
+  .btn-danger-outline{background:#FDEDEB;color:var(--danger);border:1.5px solid #F3C6BE;}
+
+  .stack{display:flex; flex-direction:column; gap:10px;}
+  .spacer-s{height:8px;} .spacer-m{height:18px;} .spacer-l{height:30px;}
+
+  h1.big{
+    font-family:Cambria,Georgia,serif;
+    font-size:26px; line-height:1.25; color:var(--ink); margin:0 0 10px;
+  }
+  p.sub{color:var(--muted); font-size:13.5px; line-height:1.55; margin:0 0 22px;}
+
+  .field{
+    border:1.5px solid var(--line); border-radius:14px;
+    padding:14px 16px; margin-bottom:14px; background:var(--card);
+  }
+  .field label{display:block; font-size:11px; color:var(--muted); font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px;}
+  .field input{border:none; outline:none; font-size:15px; width:100%; font-family:inherit; color:var(--ink); background:transparent;}
+  .field.focus{border-color:var(--orange);}
+
+  .card{
+    background:var(--card); border-radius:16px; padding:16px;
+    border:1px solid var(--line);
+    margin-bottom:12px;
+  }
+  .card.tint{background:var(--orange-tint2); border-color:var(--orange-tint);}
+  .row{display:flex; align-items:center; gap:12px;}
+  .row.between{justify-content:space-between;}
+  .icon-circle{
+    width:40px;height:40px;border-radius:50%;
+    background:var(--orange-tint); color:var(--orange);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px; flex-shrink:0;
+  }
+  .icon-circle.navy{background:var(--navy); color:var(--orange);}
+  .icon-circle.sm{width:32px;height:32px;font-size:14px;}
+  .t-title{font-size:14.5px; font-weight:700; color:var(--ink);}
+  .t-sub{font-size:12px; color:var(--muted); margin-top:2px; line-height:1.4;}
+  .chev{color:var(--muted); font-size:16px;}
+
+  /* toggle switch */
+  .switch{width:44px;height:26px;border-radius:20px;background:var(--line);position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;}
+  .switch .knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.25);transition:left .15s;}
+  .switch.on{background:var(--orange);}
+  .switch.on .knob{left:21px;}
+
+  .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.3px;}
+  .badge.green{background:#E5F6EC;color:var(--success);}
+  .badge.orange{background:var(--orange-tint);color:var(--orange);}
+  .badge.gray{background:var(--line);color:var(--muted);}
+
+  /* bottom tab bar */
+  .tabbar{
+    display:flex; border-top:1px solid var(--line); background:var(--card);
+    flex-shrink:0; padding:8px 8px 14px;
+  }
+  .tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:var(--muted); font-size:10px; font-weight:600;}
+  .tab .ti{font-size:19px;}
+  .tab.active{color:var(--orange);}
+
+  /* otp boxes */
+  .otp-row{display:flex; gap:10px; margin-bottom:22px;}
+  .otp-box{
+    flex:1; aspect-ratio:1; border:1.5px solid var(--line); border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px; font-weight:700; color:var(--ink); background:var(--card);
+  }
+  .otp-box.filled{border-color:var(--orange); color:var(--orange);}
+
+  /* toast */
+  .toast{
+    position:absolute; left:20px; right:20px; bottom:20px;
+    background:var(--navy); color:#fff; padding:14px 16px; border-radius:14px;
+    display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+    opacity:0; transform:translateY(10px); pointer-events:none;
+    transition:all .25s ease; z-index:80;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+  .toast .tick{color:var(--orange); font-size:15px;}
+
+  .center-flex{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 30px; text-align:center;}
+
+  .nav-hint{
+    max-width:375px; color:#8B8CB8; font-size:11.5px; text-align:center; margin-top:14px; line-height:1.5;
+  }
+
+  .side-panel{
+    width:300px; color:#fff; padding-top:6px;
+  }
+  .side-panel h3{font-family:Cambria,Georgia,serif; font-size:16px; margin:0 0 10px; color:var(--orange);}
+  .side-panel ol{margin:0; padding-left:18px; font-size:13px; line-height:2; color:#C7C8E6;}
+  .side-panel li.active{color:#fff; font-weight:700;}
+  .side-panel .note{margin-top:20px; padding:14px; background:rgba(255,255,255,0.06); border-radius:12px; font-size:12px; color:#A9AAD1; line-height:1.6;}
+
+  /* ---- v2 additions ---- */
+  :focus-visible{outline:3px solid #FFB27A; outline-offset:2px;}
+
+  .purpose{font-size:11.5px; color:var(--muted); line-height:1.55; margin-top:5px;}
+  .purpose b{color:var(--ink); font-weight:700;}
+  .link-row{font-size:11.5px; color:var(--orange); font-weight:700; margin-top:8px; cursor:pointer; display:inline-block;}
+
+  /* privacy score */
+  .score-card{background:linear-gradient(135deg,var(--navy),var(--navy2)); border-radius:20px; padding:18px 18px 16px; margin-bottom:16px; color:#fff;}
+  .score-top{display:flex; align-items:center; gap:16px;}
+  .score-ring{width:78px; height:78px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:conic-gradient(var(--orange) calc(var(--pct,92)*1%), rgba(255,255,255,0.14) 0);}
+  .score-ring-inner{width:60px; height:60px; border-radius:50%; background:var(--navy2); display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .score-num{font-size:19px; font-weight:800; color:#fff; font-family:Cambria,Georgia,serif; line-height:1;}
+  .score-den{font-size:8.5px; color:#A9AAD1; margin-top:1px;}
+  .score-head-text .t1{font-size:15px; font-weight:700; font-family:Cambria,Georgia,serif;}
+  .score-head-text .t2{font-size:11.5px; color:#B9BAE0; margin-top:3px; line-height:1.5;}
+  .score-checklist{margin-top:14px; display:flex; flex-direction:column; gap:7px;}
+  .score-item{display:flex; align-items:center; gap:8px; font-size:12px; color:#D8D9F0;}
+  .score-item .ic{width:15px; text-align:center; flex-shrink:0; color:#3DD68C; font-weight:700;}
+  .score-item.warn{color:#FFD9B0;}
+  .score-item.warn .ic{color:#FFB259;}
+  .score-suggest{margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.14);}
+  .score-suggest .label{font-size:9.5px; font-weight:700; letter-spacing:1px; color:var(--orange); text-transform:uppercase; margin-bottom:7px;}
+  .score-suggest ul{margin:0; padding-left:16px; font-size:11.5px; color:#D8D9F0; line-height:1.9;}
+
+  /* timeline */
+  .tl{position:relative; padding-left:22px; margin-top:4px;}
+  .tl-item{position:relative; padding-bottom:20px;}
+  .tl-item:last-child{padding-bottom:2px;}
+  .tl-item::before{content:''; position:absolute; left:-22px; top:3px; width:11px; height:11px; border-radius:50%; background:var(--dotcolor,var(--orange)); border:2px solid #fff; box-shadow:0 0 0 1.5px var(--line);}
+  .tl-item::after{content:''; position:absolute; left:-17px; top:15px; bottom:-6px; width:2px; background:var(--line);}
+  .tl-item:last-child::after{display:none;}
+  .tl-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px;}
+  .tl-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .tl-title{font-size:13px; font-weight:700; color:var(--ink);}
+  .tl-time{font-size:10.5px; color:var(--muted); white-space:nowrap;}
+  .tl-meta{display:flex; gap:14px; margin-top:8px;}
+  .tl-meta-item{font-size:10.5px; color:var(--muted);}
+  .tl-meta-item b{display:block; color:var(--ink); font-size:11.5px; font-weight:700;}
+
+  /* accessibility + retention rows */
+  .a11y-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line);}
+  .a11y-row:last-child{border-bottom:none;}
+  .a11y-row .t-title{font-size:13px;}
+  .retention-reason{font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5;}
+  .retention-reason b{color:var(--ink);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Deliverable 2 · Clickable Prototype</div>
+  <h1>Vedantu — Trust by Design</h1>
+  <p>Happy-path consent &amp; data-rights flow. Click through: Signup → Age Gate → Parent Verification → Privacy Intro → Permissions → Home → Privacy Hub → Manage Consent → Data Rights.</p>
+</div>
+
+<div class="stage">
+
+  <div class="side-panel">
+    <h3>Flow steps</h3>
+    <ol id="flowList">
+      <li data-s="splash">Splash</li>
+      <li data-s="signup">Create account</li>
+      <li data-s="agegate">Age gate result</li>
+      <li data-s="parentphone">Parent verification</li>
+      <li data-s="otp">OTP confirmation</li>
+      <li data-s="verified">Verified</li>
+      <li data-s="privacyintro">Privacy introduction</li>
+      <li data-s="permissions">Camera &amp; mic permission</li>
+      <li data-s="home">Home</li>
+      <li data-s="privacyhub">Privacy Hub (+ Privacy Score)</li>
+      <li data-s="manageconsent">Manage consent (+ purpose labels)</li>
+      <li data-s="airationale">How AI uses your data</li>
+      <li data-s="retention">Data retention</li>
+      <li data-s="download">Download my data</li>
+      <li data-s="delete">Delete my data</li>
+      <li data-s="history">Consent history (timeline)</li>
+      <li data-s="parentdash">Parent Controls preview</li>
+      <li data-s="accessibility">Accessibility</li>
+    </ol>
+    <div class="note">This is the intern-assignment happy path: no dead ends, no error states. Tap any element with a pointer cursor — buttons, toggles, tab bar, and the flow list on the left all navigate the prototype.</div>
+  </div>
+
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+
+      <!-- ============ SPLASH ============ -->
+      <div class="view active" id="v-splash">
+        <div class="statusbar on-dark"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="center-flex" style="background:var(--navy); margin:0 -0px; flex:1; border-radius:0 0 0 0;">
+          <div class="icon-circle navy" style="width:64px;height:64px;font-size:28px;margin-bottom:18px;">🛡</div>
+          <div style="font-family:Cambria,Georgia,serif; font-size:28px; color:#fff; font-weight:700;">vedantu</div>
+          <div style="color:#A9AAD1; font-size:12.5px; margin-top:6px;">Trust by Design</div>
+        </div>
+        <div style="padding:20px; background:var(--navy);">
+          <button class="btn btn-primary" onclick="goTo('signup')">Get Started</button>
+        </div>
+      </div>
+
+      <!-- ============ SIGNUP ============ -->
+      <div class="view" id="v-signup">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="dots">
+          <div class="dot now"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="content pad-top" style="padding-top:22px;">
+          <h1 class="big">Let's create your account</h1>
+          <p class="sub">We ask your date of birth first so we can tailor consent to you — not a one-size-fits-all checkbox.</p>
+          <div class="field"><label>Full name</label><input value="Aarav Sharma" readonly></div>
+          <div class="field"><label>Mobile number</label><input value="+91 98XXX XX210" readonly></div>
+          <div class="field focus"><label>Date of birth</label><input value="14 / 03 / 2011" readonly></div>
+          <div class="spacer-s"></div>
+          <button class="btn btn-primary" onclick="goTo('agegate')">Continue</button>
+        </div>
+      </div>
+
+      <!-- ============ AGE GATE RESULT ============ -->
+      <div class="view" id="v-agegate">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="dots">
+          <div class="dot done"></div><div class="dot now"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="content pad-top" style="padding-top:22px;">
+          <div class="icon-circle" style="margin-bottom:16px;">👤</div>
+          <h1 class="big">You're 15 — a parent needs to confirm a few things first</h1>
+          <p class="sub">Because you're under 18, India's data protection law (DPDP Act) requires a parent or guardian to verify and consent before we activate live classes, recordings, or AI recommendations for your account.</p>
+          <div class="card tint">
+            <div class="row"><span style="font-size:18px;">💡</span><div><div class="t-title">Why we ask this</div><div class="t-sub">This one extra step means your parent stays in control — and you can still use most of the app right after.</div></div></div>
+          </div>
+          <div class="spacer-m"></div>
+          <button class="btn btn-primary" onclick="goTo('parentphone')">Add parent's number</button>
+        </div>
+      </div>
+
+      <!-- ============ PARENT PHONE ============ -->
+      <div class="view" id="v-parentphone">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('agegate')">‹</div><h2>Parent verification</h2></div>
+        <div class="dots" style="padding-top:0;">
+          <div class="dot done"></div><div class="dot done"></div><div class="dot now"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="content pad-top" style="padding-top:22px;">
+          <p class="sub" style="margin-bottom:18px;">Enter a parent or guardian's mobile number. We'll send a one-time code to confirm it's really them.</p>
+          <div class="field focus"><label>Parent's mobile number</label><input value="+91 98XXX XX881" readonly></div>
+          <div class="field"><label>Relationship</label><input value="Mother" readonly></div>
+          <div class="spacer-s"></div>
+          <button class="btn btn-primary" onclick="goTo('otp')">Send verification code</button>
+        </div>
+      </div>
+
+      <!-- ============ OTP ============ -->
+      <div class="view" id="v-otp">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('parentphone')">‹</div><h2>Enter the code</h2></div>
+        <div class="dots" style="padding-top:0;">
+          <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot now"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="content pad-top" style="padding-top:22px;">
+          <p class="sub" style="margin-bottom:20px;">We sent a 4-digit code to <strong style="color:var(--ink);">+91 98XXX XX881</strong>. It's valid for 10 minutes.</p>
+          <div class="otp-row">
+            <div class="otp-box filled">4</div><div class="otp-box filled">7</div><div class="otp-box filled">1</div><div class="otp-box filled">9</div>
+          </div>
+          <button class="btn btn-primary" onclick="goTo('verified')">Verify &amp; continue</button>
+          <div class="spacer-s"></div>
+          <button class="btn-text" style="width:100%;">Resend code (0:42)</button>
+        </div>
+      </div>
+
+      <!-- ============ VERIFIED ============ -->
+      <div class="view" id="v-verified">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="center-flex">
+          <div class="icon-circle" style="width:64px;height:64px;font-size:30px;background:#E5F6EC;color:var(--success);margin-bottom:18px;">✓</div>
+          <h1 class="big" style="text-align:center;">Parent verified</h1>
+          <p class="sub" style="text-align:center;">Priya S. can now see and manage every consent choice tied to Aarav's account, any time, from her own Vedantu login.</p>
+        </div>
+        <div style="padding:20px;">
+          <button class="btn btn-primary" onclick="goTo('privacyintro')">Continue</button>
+        </div>
+      </div>
+
+      <!-- ============ PRIVACY INTRO ============ -->
+      <div class="view" id="v-privacyintro">
+        <div class="statusbar on-dark"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div style="background:var(--navy); flex:1; display:flex; flex-direction:column; padding:28px 24px;">
+          <div class="icon-circle navy" style="margin-bottom:20px;">🛡</div>
+          <h1 class="big" style="color:#fff;">Four questions we'll always answer for you</h1>
+          <div class="spacer-m"></div>
+          <div class="stack">
+            <div class="row" style="gap:14px;"><div class="icon-circle navy sm">?</div><div style="color:#E4E4F6; font-size:13.5px;">What data is collected — shown before we ever collect it</div></div>
+            <div class="row" style="gap:14px;"><div class="icon-circle navy sm">i</div><div style="color:#E4E4F6; font-size:13.5px;">Why it's needed — in plain language, not legal text</div></div>
+            <div class="row" style="gap:14px;"><div class="icon-circle navy sm">⚙</div><div style="color:#E4E4F6; font-size:13.5px;">Can you control it — every toggle lives in one Privacy Hub</div></div>
+            <div class="row" style="gap:14px;"><div class="icon-circle navy sm">↺</div><div style="color:#E4E4F6; font-size:13.5px;">Can you revoke it later — yes, in one tap, any time</div></div>
+          </div>
+          <div style="flex:1;"></div>
+          <button class="btn btn-primary" onclick="goTo('permissions')">Got it</button>
+        </div>
+      </div>
+
+      <!-- ============ PERMISSIONS ============ -->
+      <div class="view" id="v-permissions">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="content pad-top" style="padding-top:26px;">
+          <div class="icon-circle" style="margin-bottom:16px;">🎥</div>
+          <h1 class="big">Vedantu would like to use your camera &amp; microphone</h1>
+          <p class="sub">Needed so your teacher can see and hear you during live classes. Off by default in recorded classes and homework.</p>
+          <div class="card">
+            <div class="row between"><div class="row"><span style="font-size:16px;">📹</span><span class="t-title">Camera</span></div><span class="badge orange">Only during live class</span></div>
+          </div>
+          <div class="card">
+            <div class="row between"><div class="row"><span style="font-size:16px;">🎙</span><span class="t-title">Microphone</span></div><span class="badge orange">Only during live class</span></div>
+          </div>
+          <div class="spacer-s"></div>
+          <button class="btn btn-primary" onclick="goTo('home')">Allow while using app</button>
+          <div class="spacer-s"></div>
+          <button class="btn-text" style="width:100%;" onclick="goTo('home')">Not now — I'll set this before my first class</button>
+        </div>
+      </div>
+
+      <!-- ============ HOME ============ -->
+      <div class="view" id="v-home">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="content pad-top" style="padding-top:20px;">
+          <div class="row between" style="margin-bottom:18px;">
+            <div><div style="font-size:12px;color:var(--muted);">Welcome back</div><div style="font-family:Cambria,Georgia,serif;font-size:20px;font-weight:700;">Aarav Sharma</div></div>
+            <div class="icon-circle sm">👤</div>
+          </div>
+          <div class="card tint">
+            <div class="row between">
+              <div><div class="t-title">Physics — Live Class</div><div class="t-sub">Starts in 25 min · Camera &amp; mic will turn on when you join</div></div>
+              <div class="icon-circle sm">▶</div>
+            </div>
+          </div>
+          <div class="spacer-s"></div>
+          <div class="card">
+            <div class="row between"><div class="t-title">Homework due today</div><span class="badge gray">2 pending</span></div>
+          </div>
+          <div class="card">
+            <div class="row between"><div class="t-title">Your consent status</div><span class="badge green">Up to date</span></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab active" onclick="goTo('home')"><div class="ti">🏠</div>Home</div>
+          <div class="tab"><div class="ti">📚</div>Classes</div>
+          <div class="tab" onclick="goTo('privacyhub')"><div class="ti">🛡</div>Privacy</div>
+          <div class="tab"><div class="ti">👤</div>Profile</div>
+        </div>
+      </div>
+
+      <!-- ============ PRIVACY HUB ============ -->
+      <div class="view" id="v-privacyhub">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="content pad-top" style="padding-top:20px;">
+          <h1 class="big" style="font-size:22px;">Privacy Hub</h1>
+          <p class="sub" style="margin-bottom:14px;">Everything Vedantu knows, and every switch you control, in one place.</p>
+
+          <!-- PRIVACY SCORE -->
+          <div class="score-card">
+            <div class="score-top">
+              <div class="score-ring" id="scoreRing" style="--pct:92;">
+                <div class="score-ring-inner"><div class="score-num" id="scoreNum">92</div><div class="score-den">/ 100</div></div>
+              </div>
+              <div class="score-head-text">
+                <div class="t1">Privacy Score</div>
+                <div class="t2">A quick read on how current and reviewed your privacy choices are — not a reason to turn more on.</div>
+              </div>
+            </div>
+            <div class="score-checklist" id="scoreChecklist">
+              <div class="score-item"><span class="ic">✓</span>Parent verified</div>
+              <div class="score-item"><span class="ic">✓</span>Consent up to date</div>
+              <div class="score-item"><span class="ic">✓</span>Learning analytics reviewed</div>
+              <div class="score-item"><span class="ic">✓</span>Download available</div>
+              <div class="score-item warn" id="scoreMarketingItem"><span class="ic">!</span>Marketing preferences not reviewed recently</div>
+            </div>
+            <div class="score-suggest">
+              <div class="label">Suggestions</div>
+              <ul>
+                <li id="sugMarketing">Review your marketing preferences</li>
+                <li>Download your personal data at least once</li>
+                <li>Review your permissions every 6 months</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card" onclick="goTo('manageconsent')" style="cursor:pointer;" tabindex="0" role="button">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">⚙</div><div><div class="t-title">Manage consent</div><div class="t-sub" id="consentSummary">3 of 3 optional permissions on</div></div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+          <div class="card" onclick="goTo('history')" style="cursor:pointer;" tabindex="0" role="button">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">🕓</div><div><div class="t-title">Consent history</div><div class="t-sub">See every change, timestamped</div></div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+          <div class="card" onclick="goTo('retention')" style="cursor:pointer;" tabindex="0" role="button">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">📦</div><div><div class="t-title">How long we keep your data</div><div class="t-sub">Retention period for every data type</div></div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+          <div class="card" onclick="goTo('download')" style="cursor:pointer;" tabindex="0" role="button">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">⬇</div><div><div class="t-title">Download my data</div><div class="t-sub">Export profile, attendance &amp; analytics</div></div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+          <div class="card" onclick="goTo('delete')" style="cursor:pointer;" tabindex="0" role="button">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">🗑</div><div><div class="t-title">Delete my data</div><div class="t-sub">Permanently remove your account data</div></div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+          <div class="card" onclick="goTo('accessibility')" style="cursor:pointer;" tabindex="0" role="button">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">♿</div><div><div class="t-title">Accessibility</div><div class="t-sub">Text size, contrast, screen reader support</div></div></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+
+          <div class="spacer-s"></div>
+          <div class="card tint" onclick="goTo('parentdash')" style="cursor:pointer;" tabindex="0" role="button">
+            <div class="row between" style="margin-bottom:10px;">
+              <div class="t-title">Parent Controls</div>
+              <span class="badge green">Active</span>
+            </div>
+            <div class="row" style="gap:20px;">
+              <div><div class="tl-meta-item">Guardian<b>Priya Sharma</b></div></div>
+              <div><div class="tl-meta-item">Last updated<b>2 Jul 2026</b></div></div>
+            </div>
+            <div class="link-row" style="margin-top:10px;">View Parent Dashboard ›</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="tab" onclick="goTo('home')"><div class="ti">🏠</div>Home</div>
+          <div class="tab"><div class="ti">📚</div>Classes</div>
+          <div class="tab active" onclick="goTo('privacyhub')"><div class="ti">🛡</div>Privacy</div>
+          <div class="tab"><div class="ti">👤</div>Profile</div>
+        </div>
+      </div>
+
+      <!-- ============ MANAGE CONSENT ============ -->
+      <div class="view" id="v-manageconsent">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('privacyhub')">‹</div><h2>Manage consent</h2></div>
+        <div class="content pad-top">
+          <p class="sub">Essential permissions (attendance, class access) can't be switched off — they're required to use Vedantu. Everything below is optional.</p>
+
+          <div class="card">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">📣</div><div><div class="t-title">Marketing messages</div></div></div>
+              <div class="switch on" id="tg-marketing" tabindex="0" role="switch" aria-checked="true" aria-label="Marketing messages" onclick="toggle('marketing')"><div class="knob"></div></div>
+            </div>
+            <div class="purpose"><b>Purpose:</b> used only to send offers, webinar invites, and product updates.</div>
+          </div>
+          <div class="card">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">📊</div><div><div class="t-title">Learning analytics</div></div></div>
+              <div class="switch on" id="tg-analytics" tabindex="0" role="switch" aria-checked="true" aria-label="Learning analytics" onclick="toggle('analytics')"><div class="knob"></div></div>
+            </div>
+            <div class="purpose"><b>Purpose:</b> used only to personalise recommendations, flag weak topics, and improve study plans.</div>
+            <div class="link-row" onclick="goTo('airationale')" tabindex="0" role="button">How Vedantu uses this data ›</div>
+          </div>
+          <div class="card">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">⏺</div><div><div class="t-title">Class recording storage</div></div></div>
+              <div class="switch on" id="tg-recording" tabindex="0" role="switch" aria-checked="true" aria-label="Class recording storage" onclick="toggle('recording')"><div class="knob"></div></div>
+            </div>
+            <div class="purpose"><b>Purpose:</b> saves live-class recordings so you can revise later.</div>
+          </div>
+          <div class="card">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">🎥</div><div><div class="t-title">Camera during live class</div></div></div>
+              <span class="badge gray">Locked on</span>
+            </div>
+            <div class="purpose"><b>Purpose:</b> required for your teacher to see and interact with you — can't be turned off without disabling live classes.</div>
+          </div>
+          <div class="card">
+            <div class="row between">
+              <div class="row"><div class="icon-circle sm">🎙</div><div><div class="t-title">Microphone during live class</div></div></div>
+              <span class="badge gray">Locked on</span>
+            </div>
+            <div class="purpose"><b>Purpose:</b> required only during live classes so you can speak and ask questions.</div>
+          </div>
+
+          <div class="spacer-m"></div>
+          <button class="btn btn-primary" onclick="saveConsent()">Save changes</button>
+        </div>
+      </div>
+
+      <!-- ============ DOWNLOAD DATA ============ -->
+      <div class="view" id="v-download">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('privacyhub')">‹</div><h2>Download my data</h2></div>
+        <div class="content pad-top">
+          <p class="sub">You'll get a structured file with everything below. It usually takes under a minute to prepare.</p>
+          <div class="card"><div class="row"><span>👤</span><div class="t-title" style="margin-left:10px;">Profile &amp; account details</div></div></div>
+          <div class="card"><div class="row"><span>📅</span><div class="t-title" style="margin-left:10px;">Attendance &amp; class history</div></div></div>
+          <div class="card"><div class="row"><span>📊</span><div class="t-title" style="margin-left:10px;">Learning analytics &amp; AI recommendations</div></div></div>
+          <div class="card"><div class="row"><span>💳</span><div class="t-title" style="margin-left:10px;">Payment &amp; subscription history</div></div></div>
+          <div class="spacer-m"></div>
+          <button class="btn btn-primary" onclick="requestExport()">Request download</button>
+        </div>
+      </div>
+
+      <!-- ============ DELETE DATA ============ -->
+      <div class="view" id="v-delete">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('privacyhub')">‹</div><h2>Delete my data</h2></div>
+        <div class="content pad-top">
+          <div class="card" style="background:#FDEDEB; border-color:#F3C6BE;">
+            <div class="t-title" style="color:var(--danger); margin-bottom:4px;">This can't be undone after 7 days</div>
+            <div class="t-sub">We'll pause your account immediately. You have 7 days to change your mind, then everything is permanently erased.</div>
+          </div>
+          <div class="spacer-s"></div>
+          <p class="sub">This removes your profile, class history, recordings, and analytics. It does not affect invoices we're required to keep for tax records.</p>
+          <button class="btn btn-danger-outline" onclick="requestDelete()">Start deletion</button>
+          <div class="spacer-s"></div>
+          <button class="btn-ghost btn" onclick="goTo('privacyhub')">Cancel</button>
+        </div>
+      </div>
+
+      <!-- ============ CONSENT HISTORY ============ -->
+      <div class="view" id="v-history">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('privacyhub')">‹</div><h2>Consent history</h2></div>
+        <div class="content pad-top">
+          <p class="sub" style="margin-bottom:18px;">Every grant, revoke, and verification — who did it, from where, and whether it succeeded.</p>
+          <div class="tl" id="historyTimeline">
+            <div class="tl-item" style="--dotcolor:#1F9D55;">
+              <div class="tl-card">
+                <div class="tl-head"><div class="tl-title">Parent verified</div><div class="tl-time">4:12 PM</div></div>
+                <div class="tl-meta">
+                  <div class="tl-meta-item">Date<b>2 Jul 2026</b></div>
+                  <div class="tl-meta-item">By<b>Priya Sharma</b></div>
+                  <div class="tl-meta-item">Device<b>Android</b></div>
+                </div>
+                <div class="spacer-s"></div>
+                <span class="badge green">Successful</span>
+              </div>
+            </div>
+            <div class="tl-item" style="--dotcolor:#1F9D55;">
+              <div class="tl-card">
+                <div class="tl-head"><div class="tl-title">Camera &amp; microphone granted</div><div class="tl-time">4:14 PM</div></div>
+                <div class="tl-meta">
+                  <div class="tl-meta-item">Date<b>2 Jul 2026</b></div>
+                  <div class="tl-meta-item">By<b>Aarav (Student)</b></div>
+                  <div class="tl-meta-item">Device<b>Android</b></div>
+                </div>
+                <div class="spacer-s"></div>
+                <span class="badge green">Scoped to live class</span>
+              </div>
+            </div>
+            <div class="tl-item" style="--dotcolor:#FF6300;">
+              <div class="tl-card">
+                <div class="tl-head"><div class="tl-title">Learning analytics enabled</div><div class="tl-time">4:14 PM</div></div>
+                <div class="tl-meta">
+                  <div class="tl-meta-item">Date<b>2 Jul 2026</b></div>
+                  <div class="tl-meta-item">By<b>Aarav (Student)</b></div>
+                  <div class="tl-meta-item">Device<b>Android</b></div>
+                </div>
+                <div class="spacer-s"></div>
+                <span class="badge orange">Granted</span>
+              </div>
+            </div>
+            <div class="tl-item" style="--dotcolor:#FF6300;">
+              <div class="tl-card">
+                <div class="tl-head"><div class="tl-title">Marketing messages enabled</div><div class="tl-time">4:14 PM</div></div>
+                <div class="tl-meta">
+                  <div class="tl-meta-item">Date<b>2 Jul 2026</b></div>
+                  <div class="tl-meta-item">By<b>Aarav (Student)</b></div>
+                  <div class="tl-meta-item">Device<b>Android</b></div>
+                </div>
+                <div class="spacer-s"></div>
+                <span class="badge orange">Granted</span>
+              </div>
+            </div>
+            <div class="tl-item" style="--dotcolor:#C0392B;">
+              <div class="tl-card">
+                <div class="tl-head"><div class="tl-title">Marketing notifications disabled</div><div class="tl-time">8:43 PM</div></div>
+                <div class="tl-meta">
+                  <div class="tl-meta-item">Date<b>15 Jul 2026</b></div>
+                  <div class="tl-meta-item">By<b>Priya Sharma (Parent)</b></div>
+                  <div class="tl-meta-item">Device<b>Web</b></div>
+                </div>
+                <div class="spacer-s"></div>
+                <span class="badge gray">Revoked</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ RETENTION ============ -->
+      <div class="view" id="v-retention">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('privacyhub')">‹</div><h2>How long we keep your data</h2></div>
+        <div class="content pad-top">
+          <p class="sub" style="margin-bottom:16px;">We keep data only as long as it's useful to you or required by law, then it's deleted automatically.</p>
+
+          <div class="card">
+            <div class="row between"><div class="t-title">Attendance</div><span class="badge orange">5 years</span></div>
+            <div class="retention-reason"><b>Why:</b> schools require attendance records for the full academic cycle. <b>Deletion trigger:</b> auto-purged 5 years after the record date.</div>
+          </div>
+          <div class="card">
+            <div class="row between"><div class="t-title">Assignments</div><span class="badge orange">Until course ends</span></div>
+            <div class="retention-reason"><b>Why:</b> needed for grading and progress tracking through the course. <b>Deletion trigger:</b> removed 90 days after course completion.</div>
+          </div>
+          <div class="card">
+            <div class="row between"><div class="t-title">Live class recordings</div><span class="badge orange">Until course ends</span></div>
+            <div class="retention-reason"><b>Why:</b> lets you revise past lessons. <b>Deletion trigger:</b> course completion, or earlier if a parent deletes it manually.</div>
+          </div>
+          <div class="card">
+            <div class="row between"><div class="t-title">Quiz results</div><span class="badge orange">Ongoing</span></div>
+            <div class="retention-reason"><b>Why:</b> powers weak-topic detection and personalised recommendations. <b>Deletion trigger:</b> removed if you turn off Learning Analytics, or on account deletion.</div>
+          </div>
+          <div class="card">
+            <div class="row between"><div class="t-title">Payments</div><span class="badge orange">As required by law</span></div>
+            <div class="retention-reason"><b>Why:</b> Indian tax law requires invoices to be retained for a fixed statutory period. <b>Deletion trigger:</b> cannot be deleted early, even on request.</div>
+          </div>
+          <div class="card">
+            <div class="row between"><div class="t-title">Chat messages</div><span class="badge orange">12 months</span></div>
+            <div class="retention-reason"><b>Why:</b> supports moderation and dispute resolution between students, parents, and teachers. <b>Deletion trigger:</b> auto-purged on a rolling 12-month window.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ AI EXPLAINABILITY ============ -->
+      <div class="view" id="v-airationale">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('manageconsent')">‹</div><h2>How Vedantu uses your learning data</h2></div>
+        <div class="content pad-top">
+          <div class="card tint">
+            <div class="t-sub" style="font-size:13px; color:var(--ink); line-height:1.6;">We analyse quiz scores, learning progress, and class activity to personalise your study plan and recommend the next best lesson.</div>
+          </div>
+          <div class="spacer-s"></div>
+          <div class="card">
+            <div class="t-title" style="margin-bottom:8px;">✓ What data is used</div>
+            <div class="t-sub" style="line-height:1.8;">Quiz &amp; test scores · Time spent per topic · Homework completion · Live class attendance</div>
+          </div>
+          <div class="card">
+            <div class="t-title" style="margin-bottom:8px; color:var(--danger);">✕ What is NOT used</div>
+            <div class="t-sub" style="line-height:1.8;">Camera or microphone recordings · Chat message content · Data from outside Vedantu</div>
+          </div>
+          <div class="card">
+            <div class="t-title" style="margin-bottom:8px;">Why it benefits you</div>
+            <div class="t-sub" style="line-height:1.8;">Surfaces the exact topics you're weak in, so revision time goes where it actually helps your score.</div>
+          </div>
+          <div class="card" style="background:var(--navy); border:none;">
+            <div class="t-title" style="color:#fff;">We never use this data for advertising, and we never sell your personal learning data.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PARENT DASHBOARD PREVIEW ============ -->
+      <div class="view" id="v-parentdash">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('privacyhub')">‹</div><h2>Parent Controls</h2></div>
+        <div class="content pad-top">
+          <p class="sub" style="margin-bottom:16px;">A preview of what Priya sees from her own Vedantu login — full controls live in her Parent Dashboard, not on Aarav's device.</p>
+          <div class="card">
+            <div class="row between" style="margin-bottom:12px;"><div class="tl-meta-item">Guardian</div><b>Priya Sharma</b></div>
+            <div class="row between" style="margin-bottom:12px;"><div class="tl-meta-item">Child</div><b>Aarav Sharma</b></div>
+            <div class="row between" style="margin-bottom:12px;"><div class="tl-meta-item">Consent status</div><span class="badge green">Active</span></div>
+            <div class="row between" style="margin-bottom:12px;"><div class="tl-meta-item">Last updated</div><b>2 Jul 2026</b></div>
+            <div class="row between"><div class="tl-meta-item">Last modified by</div><b>Parent</b></div>
+          </div>
+          <div class="spacer-s"></div>
+          <button class="btn btn-ghost" disabled style="opacity:0.6; cursor:not-allowed;">Open full Parent Dashboard (Priya's login)</button>
+          <div class="spacer-s"></div>
+          <div class="card tint">
+            <div class="t-sub" style="color:var(--ink);">Why this exists: DPDP requires a parent to be able to review and withdraw consent at any time — this card is Aarav's read-only view into that same control, so nothing about his account is hidden from him either.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ ACCESSIBILITY ============ -->
+      <div class="view" id="v-accessibility">
+        <div class="statusbar"><span>9:41</span><span>●●● 5G 100%</span></div>
+        <div class="topbar"><div class="back" onclick="goTo('privacyhub')">‹</div><h2>Accessibility</h2></div>
+        <div class="content pad-top">
+          <div class="card">
+            <div class="a11y-row">
+              <div class="t-title">Larger text</div>
+              <div class="switch" id="tg-largetext" tabindex="0" role="switch" aria-checked="false" aria-label="Larger text" onclick="toggle('largetext')"><div class="knob"></div></div>
+            </div>
+            <div class="a11y-row">
+              <div class="t-title">High contrast mode</div>
+              <div class="switch" id="tg-contrast" tabindex="0" role="switch" aria-checked="false" aria-label="High contrast mode" onclick="toggle('contrast')"><div class="knob"></div></div>
+            </div>
+            <div class="a11y-row">
+              <div class="t-title">Reduce motion</div>
+              <div class="switch" id="tg-motion" tabindex="0" role="switch" aria-checked="false" aria-label="Reduce motion" onclick="toggle('motion')"><div class="knob"></div></div>
+            </div>
+          </div>
+          <div class="spacer-s"></div>
+          <div class="card">
+            <div class="t-title" style="margin-bottom:8px;">Built in throughout the app</div>
+            <div class="t-sub" style="line-height:1.9;">
+              ✓ VoiceOver &amp; TalkBack labels on every control<br>
+              ✓ Full keyboard navigation on web, with visible focus rings<br>
+              ✓ WCAG AA colour contrast on all text and icons<br>
+              ✓ Touch targets sized to at least 44×44px<br>
+              ✓ Logical, predictable focus order on every screen
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="toast" id="toast"><span class="tick">✓</span><span id="toastText">Saved</span></div>
+  </div>
+</div>
+
+<div class="nav-hint">Prototype scope: happy path only, per the assignment brief. Edge cases (declined consent, failed OTP, no-parent households) are covered in the deck's Risks &amp; Trade-offs slide, not clicked through here.</div>
+
+<script>
+  function goTo(id){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('v-'+id).classList.add('active');
+    document.querySelectorAll('#flowList li').forEach(li=>li.classList.toggle('active', li.dataset.s===id));
+    document.querySelector('.phone .screen').scrollTop = 0;
+    var scroller = document.getElementById('v-'+id);
+    if(scroller) scroller.scrollTop = 0;
+  }
+  document.querySelectorAll('#flowList li').forEach(li=>{
+    li.style.cursor='pointer';
+    li.setAttribute('tabindex','0');
+    li.addEventListener('click', ()=>goTo(li.dataset.s));
+  });
+
+  // consent toggles vs. accessibility toggles are tracked separately —
+  // the Privacy Score and "X of 3" summary should never be influenced by display settings.
+  var consentState = { marketing:true, analytics:true, recording:true };
+  var a11yState = { largetext:false, contrast:false, motion:false };
+  var scoreState = { marketingReviewed:false, exported:false };
+
+  function toggle(key){
+    var store = (key in consentState) ? consentState : a11yState;
+    store[key] = !store[key];
+    var el = document.getElementById('tg-'+key);
+    el.classList.toggle('on', store[key]);
+    el.setAttribute('aria-checked', store[key] ? 'true' : 'false');
+  }
+
+  function updateSummary(){
+    var on = Object.values(consentState).filter(Boolean).length;
+    document.getElementById('consentSummary').textContent = on + ' of 3 optional permissions on';
+  }
+
+  function computeScore(){
+    // Base components (20 pts each): parent verified, consent current, analytics reviewed,
+    // download feature available, marketing preferences actively reviewed.
+    // Deliberately does NOT reward turning more permissions on — only reward being
+    // verified, current, and informed, so the score can't nudge a student toward oversharing.
+    var pts = 20 + 20 + 20 + 20; // parent verified + consent current + analytics reviewed + download available (always true baseline)
+    var marketingOk = scoreState.marketingReviewed;
+    pts += marketingOk ? 20 : 12; // partial credit even when unresolved
+    var score = pts;
+    document.getElementById('scoreNum').textContent = score;
+    document.getElementById('scoreRing').style.setProperty('--pct', score);
+    var item = document.getElementById('scoreMarketingItem');
+    var sug = document.getElementById('sugMarketing');
+    if(marketingOk){
+      item.classList.remove('warn');
+      item.querySelector('.ic').textContent = '✓';
+      item.lastChild.textContent = 'Marketing preferences reviewed';
+      if(sug) sug.style.display = 'none';
+    } else {
+      item.classList.add('warn');
+      item.querySelector('.ic').textContent = '!';
+      item.lastChild.textContent = 'Marketing preferences not reviewed recently';
+      if(sug) sug.style.display = 'list-item';
+    }
+  }
+
+  function saveConsent(){
+    updateSummary();
+    scoreState.marketingReviewed = true; // opening + saving Manage Consent counts as an active review
+    computeScore();
+    showToast('Consent preferences saved');
+    setTimeout(()=>goTo('privacyhub'), 900);
+  }
+  function requestExport(){
+    scoreState.exported = true;
+    showToast('Export requested — ready within 72h');
+    setTimeout(()=>goTo('privacyhub'), 1100);
+  }
+  function requestDelete(){
+    showToast('Deletion scheduled — 7-day grace period started');
+    setTimeout(()=>goTo('privacyhub'), 1200);
+  }
+  function showToast(text){
+    var t = document.getElementById('toast');
+    document.getElementById('toastText').textContent = text;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2400);
+  }
+
+  // keyboard support: Enter / Space activates any element opted into tabindex="0"
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    var el = document.activeElement;
+    if(el && el.getAttribute && el.getAttribute('tabindex') === '0'){
+      e.preventDefault();
+      el.click();
+    }
+  });
+
+  computeScore();
+</script>
+</body>
+</html>
