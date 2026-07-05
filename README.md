@@ -47,7 +47,7 @@ Each prototype is embedded and preserved exactly as its original standalone impl
 
 ---
 
-## 🛠️ Built With
+## Built With
 
 - HTML5
 - CSS3
@@ -121,7 +121,7 @@ The integrated AI assistant helps users:
 
 ---
 
-![Uploading image.png…]()
+<img width="1267" height="623" alt="image" src="https://github.com/user-attachments/assets/afc84e9c-45c4-4338-bd56-6e7b5b4d5f98" />
 
 
 ## 🌐 Live Portfolio : https://incandescent-praline-c195d1.netlify.app/
@@ -131,7 +131,7 @@ https://prathibapanaromicportfolio.base44.app/
 
 ---
 
-## 👩‍💻 About Me
+## About Me
 
 **Prathiba P**
 
@@ -141,7 +141,7 @@ Passionate about designing privacy-first digital experiences, scalable product s
 
 ---
 
-## 📬 Connect With Me
+## Connect With Me
 
 - 🌐 Portfolio: https://prathibapanaromicportfolio.base44.app/
 - 💼 LinkedIn: https://www.linkedin.com/in/prathiba-p-50a948222
