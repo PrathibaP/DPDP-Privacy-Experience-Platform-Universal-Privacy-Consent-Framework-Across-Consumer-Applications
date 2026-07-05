@@ -121,7 +121,7 @@ The integrated AI assistant helps users:
 
 ---
 
-<img width="1267" height="623" alt="image" src="https://github.com/user-attachments/assets/afc84e9c-45c4-4338-bd56-6e7b5b4d5f98" />
+<img width="1267" height="623" alt="image" src=""C:\Users\prathiba\Downloads\Screenshot 2026-07-05 181200.jpg"" />
 
 
 ## 🌐 Live Portfolio : https://incandescent-praline-c195d1.netlify.app/
